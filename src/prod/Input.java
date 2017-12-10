@@ -19,12 +19,16 @@ public class Input {
     
     public int getInt(String info) {
         System.out.print(info);
-        return scan.nextInt();
+        int response = scan.nextInt();
+        scan.nextLine();
+        return response;
     }
     
     public String getLine(String info) {
+        //scan.nextLine();
         System.out.print(info);
-        return scan.nextLine();
+        String response = scan.nextLine();
+        return response;
     }
     
 }

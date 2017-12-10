@@ -11,6 +11,7 @@ import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.Iterator;
 import java.util.Scanner;
+import java.util.List;
 
 /**
  *
@@ -19,51 +20,121 @@ import java.util.Scanner;
 public class Prod {
     
     static Input input = new Input();
+    static final DatabaseHandler dbHandler = new DatabaseHandler("prod.db");
 
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        // TODO code application logic here
-        Reminder reminder = new Reminder("This is a reminder");
+        boolean success = dbHandler.createTable();
         
-        System.out.println("Reminder: " + reminder.getTitle());
-        
-        boolean proceed = true;
-        int counter = 0;
-        ReminderCatalog catalog = new ReminderCatalog();
-        
-        while (proceed) {
-            Reminder customReminder = new Reminder(
-                    input.getLine("\nNew reminder: "));
-            catalog.add(customReminder);
-            customReminder.setDate(input.getLine("Date: "));
+        if (success) {
+            Reminder reminder = new Reminder("This is a reminder");
+
+            System.out.println("Reminder: " + reminder.getTitle());
+
+            boolean proceed = true;
+            final String options = "1. Add reminder\n" + 
+                    "2. List reminders\n" + 
+                    "3. Edit reminder\n" + 
+                    "4. Search reminder\n" +
+                    "5. List reminders of date\n" +
+                    "6. List reminders of month\n" +
+                    "7. List reminders of year\n" +
+                    "8. Exit\n" +
+                    "Choice: ";
             
-            //displayReminderData(customReminder);
-            
-            counter += 1;
-            if (counter == 2){
-                break;
-            }
-            
+            while (proceed) {
+                System.out.println("\nChoose action:");
+                int choice = input.getInt(options);
+                
+                switch (choice) {
+                    case 1:
+                        addReminder();
+                        break;
+                    case 2:
+                        listReminders();
+                        break;
+                    case 3:
+                        editReminder();
+                        break;
+                    case 4:
+                        searchReminders();
+                        break;
+                    case 5:
+                        listRemindersOfDate();
+                        break;
+                    case 6:
+                        listRemindersOfMonth();
+                        break;
+                    case 7:
+                        listRemindersOfYear();
+                        break;
+                    case 8:
+                        System.exit(0);
+                        break;
+                    default:
+                        break;
+                }
+            }            
         }
-        
-        System.out.println("Displaying all reminders:");
-        for (Iterator<Reminder> it = catalog.getReminders().iterator(); 
-                it.hasNext();) {
-            Reminder item = it.next();
+    }
+    
+    public static void addReminder() {
+        String title = input.getLine("\nNew reminder:");
+        String date = input.getLine("Date ("+ Reminder.dateFormat + "): ");
+        String body = input.getLine("More info: ");
+        dbHandler.insertReminder(new Reminder(title, body, date));
+    }
+    
+    public static void listReminders() {
+        List<Reminder> reminders = dbHandler.getReminders();
+        System.out.println("Displaying " + reminders.size() + " reminders.");
+        reminders.forEach((item) -> {
             displayReminderData(item);
-        }
-        
-        Date theDay = toDate("12/10/2017");
-        System.out.println("Displaying all reminders of " + theDay.toString());
-        for (Reminder item: catalog.getRemindersOfDay(theDay)) {
+        });
+    }
+    
+    public static void searchReminders() {
+        String searchQuery = input.getLine("Search: ");
+        List<Reminder> reminders = dbHandler.searchReminders(searchQuery);
+        System.out.println("Displaying " + reminders.size() + " reminders.");
+        reminders.forEach((item) -> {
             displayReminderData(item);
-        }
-        System.out.println("Catalog length (with day): " + 
-                catalog.getRemindersOfDay(theDay).size());
-        System.out.println("Catalog length (all): " + 
-                catalog.getReminders().size());
+        });
+    }
+    
+    public static void listRemindersOfDate() {
+        String date = input.getLine(
+                "Enter search date [" + Reminder.dateFormat + "]: ");
+        List<Reminder> reminders = dbHandler.getRemindersOfDate(date);
+        System.out.println("Displaying " + reminders.size() + 
+                " reminders of " + date + ".");
+        reminders.forEach((item) -> {
+            displayReminderData(item);
+        });
+    }
+    
+    public static void listRemindersOfMonth() {
+        String date = input.getLine(
+                "Enter search month [" + Reminder.monthFormat + "]: ");
+        List<Reminder> reminders = dbHandler.getRemindersOfMonth(date);
+        System.out.println("Displaying " + reminders.size() + 
+                " reminders of " + date + ".");
+        reminders.forEach((item) -> {
+            displayReminderData(item);
+        });
+    }
+    
+    public static void listRemindersOfYear() {
+        String date = input.getLine(
+                "Enter search year [" + Reminder.yearFormat + "]: ");
+        List<Reminder> reminders = dbHandler.getRemindersOfYear(date);
+        System.out.println("Displaying " + reminders.size() + 
+                " reminders of " + date + ".");
+        reminders.forEach((item) -> {
+            displayReminderData(item);
+        });
     }
     
     private static void displayReminderData(Reminder reminder) {
@@ -77,6 +148,57 @@ public class Prod {
         System.out.println("Year (Short): " + reminder.getShortYear());
         System.out.println("Body: " + reminder.getBody());
         System.out.println();
+    }
+    
+    private static void editReminder() {
+        List<Reminder> reminders = displayReminderTitles();
+        int reminderCount = reminders.size();
+        System.out.println("Size: " + reminderCount);
+        if (reminderCount > 0) {
+            int choice = input.getInt("Choose [1-" + reminderCount + "]: ");
+            System.out.println("Choice: " + choice);
+            if (choice <= reminderCount) {
+                Reminder reminder = reminders.get(choice - 1);
+                System.out.println("[Press Enter to retain]");
+                String title = input.getLine("\nNew title: ");
+                if (!title.isEmpty()) {
+                    reminder.setTitle(title);
+                }
+                String date = input.getLine("\nDate ("+ Reminder.dateFormat + "): ");
+                if (!date.isEmpty()) {
+                    reminder.setDate(date);
+                }
+                String body = input.getLine("More info: ");
+                if (!body.isEmpty()) {
+                    reminder.setBody(body);
+                }
+                int success = dbHandler.updateReminder(reminder);
+                if (success > 0) {
+                    System.out.println("Reminder updated successfully");
+                    displayReminderData(reminder);
+                } else {
+                    System.out.println("Update failed");
+                }
+            } else {
+                System.out.println("Reminder not found.");
+            }
+            
+        } else {
+            System.out.println("No reminder found");
+        }
+                
+    }
+    
+    private static List<Reminder> displayReminderTitles() {
+        List<Reminder> reminders = dbHandler.getRemindersWithID();
+        int counter = 1;
+        for (Reminder reminder: reminders) {
+            System.out.println("\n-- " + counter + ": " + reminder.getTitle());
+            System.out.println();
+            counter++;
+        }
+        return reminders;
+        
     }
     
     private static Date toDate(String date) {

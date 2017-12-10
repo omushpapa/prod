@@ -20,9 +20,39 @@ public class Reminder {
     public String title = "Sample Title";
     public String body = "Sample Body";
     public String date = null;
+    private Integer rowid = null;
+    public static String dateFormat = "dd/MM/yyyy";
+    public static String monthFormat = "MM/yyyy";
+    public static String yearFormat = "yyyy";
     
     public Reminder (String title) {
         this.title = title;
+    }
+    
+    public Reminder (String title, String body) {
+        this.title = title;
+        this.body = body;
+    }
+    
+    public Reminder (String title, String body, String date) {
+        this.title = title;
+        this.body = body;
+        this.date = date;
+    }
+    
+    public Reminder (String title, String body, Date date) {
+        this.title = title;
+        this.body = body;
+        if (date != null) {
+            DateFormat df = new SimpleDateFormat(dateFormat);
+            this.date = df.format(date);
+        } else {
+            this.date = null;
+        }
+    }
+    
+    public int getRowID() {
+        return this.rowid;
     }
     
     public String getTitle() {
@@ -48,7 +78,7 @@ public class Reminder {
     
     public Date getDateObj() {
         Date dateObj = null;
-        DateFormat df = new SimpleDateFormat("dd/MM/yyyy");
+        DateFormat df = new SimpleDateFormat(dateFormat);
         try {
             dateObj = df.parse(date);
         } catch (ParseException e) {
@@ -126,6 +156,11 @@ public class Reminder {
     
     public Reminder setDate(String date) {
         this.date = date;
+        return this;
+    }
+    
+    public Reminder setRowID(Integer rowid) {
+        this.rowid = rowid;
         return this;
     }
     
