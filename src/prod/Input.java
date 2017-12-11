@@ -19,13 +19,21 @@ public class Input {
     
     public int getInt(String info) {
         System.out.print(info);
-        int response = scan.nextInt();
-        scan.nextLine();
+        Integer response = null;
+        boolean validInput = false;
+        while (!validInput) {
+            try {
+                response = scan.nextInt();
+                validInput = true;
+            } catch (java.util.InputMismatchException i) {
+                System.out.println("\nInvalid input. Try again\n" + info);
+            }
+            scan.nextLine();
+        }
         return response;
     }
     
     public String getLine(String info) {
-        //scan.nextLine();
         System.out.print(info);
         String response = scan.nextLine();
         return response;

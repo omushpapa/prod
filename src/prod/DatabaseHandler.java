@@ -21,11 +21,11 @@ import java.util.List;
  */
 public class DatabaseHandler {
     
-    public static String DB_NAME;
-    public static String DB_PATH = "";
+    public final String DB_NAME;
+    public String DB_PATH = "";
     
     public DatabaseHandler (String databaseName, String databasePath) {
-        DatabaseHandler.DB_NAME = databaseName;
+        this.DB_NAME = databaseName;
         this.DB_PATH = databasePath;
     }
     
