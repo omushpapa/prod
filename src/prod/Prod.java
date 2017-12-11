@@ -5,6 +5,8 @@
  */
 package prod;
 
+import prod.Models.Reminder;
+import prod.Database.DatabaseHandler;
 import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
@@ -84,7 +86,9 @@ public class Prod {
         String title = input.getLine("\nNew reminder:");
         String date = input.getLine("Date ("+ Reminder.dateFormat + "): ");
         String body = input.getLine("More info: ");
-        dbHandler.insertReminder(new Reminder(title, body, date));
+        Reminder reminder = new Reminder(title, body, date);
+        dbHandler.insertReminder(reminder);
+        displayReminderData(reminder);
     }
     
     public static void listReminders() {

@@ -5,7 +5,7 @@
  */
 package prod;
 
-import prod.Reminder;
+import prod.Models.Reminder;
 import java.util.Date;
 import org.junit.After;
 import org.junit.AfterClass;

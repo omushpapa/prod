@@ -3,7 +3,7 @@
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-package prod;
+package prod.Database;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
@@ -14,6 +14,8 @@ import java.sql.Statement;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import prod.Models.Reminder;
+import prod.Models.Reminder;
 
 /**
  *
