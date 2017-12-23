@@ -1,6 +1,6 @@
-/* 
+/*
  * BSD 3-Clause License
- *
+ * 
  * Copyright (c) 2017, Aswa Paul
  * All rights reserved.
  * 
@@ -20,7 +20,7 @@
  * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE*  ARE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
@@ -29,50 +29,46 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
+
 package prod.Gui;
 
 import java.awt.BorderLayout;
+import java.awt.CardLayout;
 import java.awt.Color;
-import java.awt.Component;
 import java.awt.Container;
 import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
+import java.awt.GridLayout;
 import java.awt.Insets;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
-import java.util.ArrayList;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
-import javax.swing.border.Border;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
-import javax.swing.Box;
-import javax.swing.DefaultListCellRenderer;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
-import javax.swing.JList;
-import javax.swing.JMenuBar;
 import javax.swing.JMenu;
+import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
+import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.ListCellRenderer;
-import javax.swing.Popup;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.BevelBorder;
+import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
 import prod.Database.DatabaseHandler;
 import prod.Models.Reminder;
@@ -82,23 +78,34 @@ import static prod.Models.Reminder.dateFormat;
  *
  * @author giantas
  */
-// A Swing GUI application inherits from top-level container javax.swing.JFrame
+
+
 public class Gui extends JFrame {
-    private static final DatabaseHandler dbHandler = new DatabaseHandler("prod.db");
+    
+    private final DatabaseHandler dbHandler = new DatabaseHandler("prod.db");
     private final int windowWidth = 700;
-    private final int windowHeight = 600;
-    private final Container container;
-    private final JPanel panelLeft = new JPanel();
-    private final JPanel panelRight = new JPanel();
-    private final GridBagConstraints gridBagConstraints = new GridBagConstraints();
-    private final int verticalSpacerSize = 8;
-    private final int horizontalSpacerSize = 15;
+    private final int windowHeight = 550;    
+    private final Container contentPane;
+    private final JMenuBar menuBar = new JMenuBar();
+    private GridBagLayout gridBagLayout = new GridBagLayout();
+    private GridBagConstraints gbc = new GridBagConstraints();
+    private JPanel panelLeft, panelRight, 
+            panelLeftTop, panelLeftDown,
+            panelRightTop, panelRightDown,
+            datePanel, controlsPanel;
+    private final JPanel tabOne = new JPanel();
+    private final JPanel tabTwo = new JPanel();
+    private JTabbedPane tabbedPane;
+    private CardLayout cardLayout = new CardLayout();
+    private GridLayout gridLayout = new GridLayout();
+    private JTextArea displayItem = new JTextArea("Hello, left top!");
     private Border lowerEtchedBorder = 
             BorderFactory.createEtchedBorder(EtchedBorder.LOWERED);
+    private JScrollPane topScrollPane = new JScrollPane();
+    private JScrollPane scrollTabOne, scrollTabTwo;
+    private BorderLayout borderLayout = new BorderLayout();
     
-    // -----
-    protected boolean controlsOnTop;
-
+    // Date variables
     protected Calendar currentDisplayDate;
 
     protected JButton prevMonth;
@@ -107,69 +114,21 @@ public class Gui extends JFrame {
     protected JButton nextYear;
 
     protected JTextField textField;
-
-    protected List<ActionListener> popupListeners = 
-        new ArrayList<ActionListener>();
-
-    protected Popup popup;
-
     protected SimpleDateFormat dayName   = new SimpleDateFormat("d");
     protected SimpleDateFormat monthName = new SimpleDateFormat("MMMM");
 
     protected String iconFile = "datepicker.gif";
     protected String[] weekdayNames = 
         {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
-    JPanel datePanel = new JPanel();
-    JPanel panelRightDown = new JPanel();
-    JPanel controlsPanel;
-    JPanel panelLeftDown = new JPanel();
-    JTextArea displayItem = new JTextArea("Hello, left top!");
-    JScrollPane topScrollPane = new JScrollPane();
-    // -----
- 
-    // Constructor to setup the GUI components and event handlers
+    
     public Gui() {
-        //-----
         currentDisplayDate   = Calendar.getInstance();
-        controlsOnTop        = true;
-       
-        // Retrieve the content-pane of the top-level container JFrame
-        // All operations done on the content-pane
+        contentPane = getContentPane();
+        contentPane.setLayout(gridBagLayout);
         
-        container = getContentPane();
-        container.setLayout(new BorderLayout());
         createMenuBar();
+        createMainWindow();
         createStatusBar();
-        
-        JPanel fullPane = new JPanel();
-        fullPane.setLayout(new GridBagLayout());
-        // Spacer
-        container.add(Box.createVerticalStrut(
-                4), BorderLayout.NORTH);
-        container.add(fullPane, BorderLayout.CENTER);
-        fullPane.setMinimumSize(new Dimension(windowWidth, windowHeight));
-        
-        // Position Left and Right panels
-        gridBagConstraints.fill = GridBagConstraints.BOTH;
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.weightx = 0.3;
-        gridBagConstraints.weighty = 1.0;
-        fullPane.add(panelLeft, gridBagConstraints);
-        
-        gridBagConstraints.gridx = 1;
-        gridBagConstraints.weightx = 0;
-        fullPane.add(Box.createHorizontalStrut(
-                15), gridBagConstraints);
-        
-        gridBagConstraints.fill = GridBagConstraints.BOTH;
-        gridBagConstraints.gridx = 2;
-        gridBagConstraints.weightx = 0.9;
-        fullPane.add(panelRight, gridBagConstraints);
-        
-        
-        configurePanelLeft(panelLeft);
-        configurePanelRight(panelRight);
         
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setTitle("Prod - Reminder"); 
@@ -186,7 +145,6 @@ public class Gui extends JFrame {
 
     public void setDate(Calendar date) {
         currentDisplayDate = date;
-        //createPanel();
         validate();
         repaint();
     }
@@ -194,7 +152,6 @@ public class Gui extends JFrame {
     public void setDate(int month, int day, int year) {
         currentDisplayDate = Calendar.getInstance();
         currentDisplayDate.set(expandYear(year), month - 1, day);
-        //createPanel();
         validate();
         repaint();
     }
@@ -214,11 +171,6 @@ public class Gui extends JFrame {
             }
         }
         return year;
-    }
-    
-    public void setControlsOnTop(boolean flag) {
-        controlsOnTop = flag; 
-        repaint();
     }
     
     public Calendar getCalendarDate() {
@@ -256,10 +208,8 @@ public class Gui extends JFrame {
         prevYear = new JButton("<<");
         c.add(prevYear);
         prevYear.setMargin(new Insets(0,0,0,0));
-        prevYear.addActionListener(new ActionListener() {
-            public void actionPerformed(ActionEvent arg0) {
-                addYear(-1);        
-            }
+        prevYear.addActionListener((ActionEvent arg0) -> {
+            addYear(-1);
         });
 
         prevMonth = new JButton("<");
@@ -272,7 +222,6 @@ public class Gui extends JFrame {
 
         textField = new JTextField(getFormattedDate(), 10);
         c.add(textField);
-        //textField.setEditable(false);
         textField.setEnabled(true);
         textField.setColumns(10);
         textField.setHorizontalAlignment(JTextField.CENTER);
@@ -301,7 +250,8 @@ public class Gui extends JFrame {
     protected JPanel createDatePicker() {
         GridBagLayout gridbag = new GridBagLayout();
         GridBagConstraints c  = new GridBagConstraints();
-
+        
+        datePanel = new JPanel();
         datePanel.setFocusable(true);
         datePanel.setLayout(gridbag);
 
@@ -370,14 +320,14 @@ public class Gui extends JFrame {
                     dayButton.setBackground(color);
                 dayButton.setFont(weekFont);
                 dayButton.setFocusable(true);
-                //dayButton.setPreferredSize(new Dimension(width, height));
                 dayButton.setMargin(new Insets(5,5,5,5));
                 dayButton.addActionListener((ActionEvent e) -> {
                     changeDay(e.getActionCommand());
-                    panelLeftDown.removeAll();
-                    listReminders(panelLeft);
+                    tabTwo.removeAll();
+                    listReminders(true);
                     validate();
                     repaint();
+                    tabbedPane.setSelectedIndex(1);
                     System.out.println("The date is " + getFormattedDate());
                     System.out.println("Date is " + currentDisplayDate.getTime().toString());
                 });
@@ -437,6 +387,183 @@ public class Gui extends JFrame {
         textField.setText(getFormattedDate());
     }
     
+    private void createMenuBar() {
+        JMenu file = new JMenu("File");
+        file.setMnemonic(KeyEvent.VK_F);
+
+        JMenuItem eMenuItem = new JMenuItem("Exit");
+        eMenuItem.setMnemonic(KeyEvent.VK_E);
+        eMenuItem.setToolTipText("Exit application");
+        eMenuItem.addActionListener((ActionEvent event) -> {
+            System.exit(0);
+        });
+
+        file.add(eMenuItem);
+
+        menuBar.add(file);
+
+        setJMenuBar(menuBar);
+    }
+
+    private void createStatusBar() {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.gridx = 0;
+        gbc.gridy = 1;
+        gbc.weightx = 1.0;
+        gbc.weighty = 0.001;
+        
+        JPanel statusPanel = new JPanel();
+        statusPanel.setBorder(new BevelBorder(BevelBorder.LOWERED));
+        contentPane.add(statusPanel, gbc);
+        statusPanel.setLayout(new BoxLayout(statusPanel, BoxLayout.X_AXIS));
+        
+        JLabel statusLabel = new JLabel("status");
+        statusLabel.setHorizontalAlignment(SwingConstants.LEFT);
+        statusPanel.add(statusLabel);
+    }
+
+    private void createMainWindow() {
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weighty = 0.999;
+        gbc.weightx = 1.0;
+        
+        JPanel mainPanel = new JPanel();
+        mainPanel.setLayout(gridBagLayout);
+        mainPanel.setBorder(
+                BorderFactory.createMatteBorder(
+                        1, 1, 1, 1, Color.BLACK));
+        
+        contentPane.add(mainPanel, gbc);
+        
+        panelLeft = new JPanel(gridBagLayout);
+        panelRight = new JPanel(gridBagLayout);
+        
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weighty = 1.0;
+        gbc.weightx = 0.25;
+        mainPanel.add(panelLeft, gbc);
+        
+        gbc.gridx = 1;
+        gbc.weightx = 0.75;
+        mainPanel.add(panelRight, gbc);
+        
+        configurePanelLeft();
+        configurePanelRight();
+    }
+    
+    public static void main(String[] args) {
+        // Run the GUI construction in the Event-Dispatching thread for thread-safety
+        SwingUtilities.invokeLater(() -> {
+            new Gui(); // Let the constructor do the job
+        });
+    }
+
+    private void configurePanelLeft() {
+        panelLeftTop = new JPanel(gridLayout);
+        panelLeftDown = new JPanel(gridLayout);
+        tabbedPane = new JTabbedPane();
+        panelLeftTop.setBorder(
+                BorderFactory.createMatteBorder(
+                        1, 1, 1, 1, Color.YELLOW));
+        panelLeftDown.setBorder(
+                BorderFactory.createMatteBorder(
+                        1, 1, 1, 1, Color.BLUE));
+        
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.BOTH;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.weighty = 0.3;
+        c.weightx = 1.0;
+        panelLeft.add(panelLeftTop, c);
+        c.gridy = 1;
+        c.weighty = 0.7;
+        panelLeft.add(panelLeftDown, c);
+        
+        // Display Area
+        displayItem.setBorder(lowerEtchedBorder);
+        displayItem.setLineWrap(true);
+        displayItem.setBackground(contentPane.getBackground());
+        displayItem.setWrapStyleWord(true);
+        displayItem.setPreferredSize(panelLeftTop.getSize());
+        // topScrollPane
+        topScrollPane.getVerticalScrollBar().setUnitIncrement(3);
+        topScrollPane.setViewportView(displayItem);
+        topScrollPane.setHorizontalScrollBarPolicy(
+                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        panelLeftTop.add(topScrollPane);
+        
+        // Bottom Panel
+        tabOne.setLayout(gridBagLayout);
+        tabTwo.setLayout(gridBagLayout);
+        panelLeftDown.add(tabbedPane);
+        
+        // ScrollPanes
+        scrollTabOne = new JScrollPane(tabOne);
+        scrollTabOne.setPreferredSize(
+                new Dimension(
+                        panelLeftDown.getWidth(),
+                        panelLeftDown.getHeight())
+        );
+        scrollTabTwo = new JScrollPane(tabTwo);
+        scrollTabTwo.setPreferredSize(
+                new Dimension(
+                        panelLeftDown.getWidth(),
+                        panelLeftDown.getHeight())
+        );
+        tabbedPane.add(scrollTabOne, "All");
+        tabbedPane.add(scrollTabTwo, "Selected Date");
+        
+        /*for (int i=0; i < 25; i++) {
+            JLabel label = new JLabel("Label " + i);
+            tabOne.add(label);
+        }*/
+        
+        listReminders(false);
+        
+        listReminders(true);
+    }
+
+    private void configurePanelRight() {
+        panelRightTop = new JPanel();
+        panelRightDown = new JPanel(borderLayout);
+        panelRightTop.setBorder(
+                BorderFactory.createMatteBorder(
+                        1, 1, 1, 1, Color.YELLOW));
+        panelRightDown.setBorder(
+                BorderFactory.createMatteBorder(
+                        1, 1, 1, 1, Color.BLUE));
+        
+        GridBagConstraints c = new GridBagConstraints();
+        c.fill = GridBagConstraints.BOTH;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.weighty = 0.1;
+        c.weightx = 1.0;
+        panelRight.add(panelRightTop, c);
+        
+        c.gridy = 1;
+        c.weighty = 0.9;
+        panelRight.add(panelRightDown, c);
+        
+        // Date picker
+        c.fill = GridBagConstraints.BOTH;
+        c.gridx = 0;
+        c.gridy = 0;
+        c.weightx = 1.0;
+        c.weighty = 0.1;
+        //panelRightDown.setLayout(new BorderLayout());
+        datePanel = createDatePicker();
+        controlsPanel = createControls();
+        panelRightDown.add(controlsPanel, BorderLayout.NORTH);
+        panelRightDown.add(datePanel, BorderLayout.CENTER);
+    }
+    
     private void refreshPanelRightDown() {
         datePanel = new JPanel();
         controlsPanel = new JPanel();
@@ -451,217 +578,41 @@ public class Gui extends JFrame {
         repaint();
     }
     
-    private void createMenuBar() {
-        JMenuBar menubar = new JMenuBar();
-
-        JMenu file = new JMenu("File");
-        file.setMnemonic(KeyEvent.VK_F);
-
-        JMenuItem eMenuItem = new JMenuItem("Exit");
-        eMenuItem.setMnemonic(KeyEvent.VK_E);
-        eMenuItem.setToolTipText("Exit application");
-        eMenuItem.addActionListener((ActionEvent event) -> {
-            System.exit(0);
-        });
-
-        file.add(eMenuItem);
-
-        menubar.add(file);
-
-        setJMenuBar(menubar);
-    }
-    
-    private void createStatusBar() {
-        // create the status bar panel and shove it down the bottom of the frame
-        JPanel statusPanel = new JPanel();
-        statusPanel.setBorder(new BevelBorder(BevelBorder.LOWERED));
-        container.add(statusPanel, BorderLayout.SOUTH);
-        statusPanel.setPreferredSize(new Dimension(container.getWidth(), 20));
-        statusPanel.setLayout(new BoxLayout(statusPanel, BoxLayout.X_AXIS));
-        JLabel statusLabel = new JLabel("status");
-        statusLabel.setHorizontalAlignment(SwingConstants.LEFT);
-        statusPanel.add(statusLabel);
-    }
-    
-    public void configurePanelLeft(JPanel panel) {
-        // Configure Left-side panels
-        // Top panel
-        gridBagConstraints.fill = GridBagConstraints.BOTH;
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.weightx = 0.3;
-        gridBagConstraints.weighty = 0.3;
-        JPanel panelLeftTop = new JPanel();
-        panelLeftTop.setBorder(
-                BorderFactory.createMatteBorder(1, 1, 1, 1, Color.YELLOW));
-        
-        panel.setLayout(new GridBagLayout());
-        panel.add(panelLeftTop, gridBagConstraints);
-        
-        // Display Area
-        //JTextArea displayItem = new JTextArea("Hello, left top!");
-        displayItem.setBorder(lowerEtchedBorder);
-        displayItem.setLineWrap(true);
-        displayItem.setBackground(panel.getBackground());
-        displayItem.setWrapStyleWord(true);
-        //displayItem.setEditable(false);
-        panelLeftTop.setLayout(new BorderLayout());
-        
-        //JScrollPane topScrollPane = new JScrollPane();
-        topScrollPane.getVerticalScrollBar().setUnitIncrement(3);
-        topScrollPane.setViewportView(displayItem);
-        topScrollPane.setHorizontalScrollBarPolicy(
-                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        panelLeftTop.add(topScrollPane);
-        
-        // Spacer
-        gridBagConstraints.fill = GridBagConstraints.BOTH;
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 1;
-        gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.weighty = 0;
-        panel.add(Box.createVerticalStrut(
-                verticalSpacerSize), gridBagConstraints);
-        
-        // Bottom panel
-        gridBagConstraints.fill = GridBagConstraints.BOTH;
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 2;
-        gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.weighty = 0.7;
-        //JPanel panelLeftDown = new JPanel();
-        panelLeftDown.setBorder(
-                BorderFactory.createMatteBorder(1, 1, 1, 1, Color.BLUE));
-        panelLeftDown.setLayout(new GridBagLayout());
-        
-        listReminders(panel);
-        
-        JScrollPane scrollPane = new JScrollPane(panelLeftDown,
-                JScrollPane.VERTICAL_SCROLLBAR_ALWAYS,
-                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        
-        panelLeftDown.setAutoscrolls(true);
-        scrollPane.setPreferredSize(new Dimension(300,800));
-        scrollPane.getVerticalScrollBar().setUnitIncrement(3);
-        SwingUtilities.invokeLater(new Runnable() {
-            public void run() { 
-                scrollPane.getVerticalScrollBar().setValue(0);
-            }
-         });
-        panel.add(scrollPane, gridBagConstraints);
-
-    }
-    
-    public void configurePanelRight(JPanel panel) {
-        // Configure right-side panels   
-        // Top panel
-        gridBagConstraints.fill = GridBagConstraints.BOTH;
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.weighty = 0.1;
-        JPanel panelRightTop = new JPanel();
-        panelRightTop.setBorder(
-                BorderFactory.createMatteBorder(1, 1, 1, 1, Color.YELLOW));
-        panelRightTop.add(new JLabel("Hello, right top!"));
-        panel.setLayout(new GridBagLayout());
-        panel.add(panelRightTop, gridBagConstraints);
-        
-        // Spacer
-        gridBagConstraints.fill = GridBagConstraints.BOTH;
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 1;
-        gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.weighty = 0;
-        panel.add(Box.createVerticalStrut(
-                verticalSpacerSize), gridBagConstraints);
-        
-        // Bottom panel
-        gridBagConstraints.fill = GridBagConstraints.BOTH;
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 2;
-        gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.weighty = 0.9;
-        
-        panelRightDown.setBorder(
-                BorderFactory.createMatteBorder(1, 1, 1, 1, Color.BLUE));
-        //panelRightDown.add(new JLabel("Hello, right down!"));
-        panel.add(panelRightDown, gridBagConstraints);
-        panel.add(panelRightDown, gridBagConstraints);
-        
-        // Date Picker
-        gridBagConstraints.fill = GridBagConstraints.BOTH;
-        gridBagConstraints.gridx = 0;
-        gridBagConstraints.gridy = 0;
-        gridBagConstraints.weightx = 1.0;
-        gridBagConstraints.weighty = 0.1;
-        panelRightDown.setLayout(new BorderLayout());
-        datePanel = createDatePicker();
-        controlsPanel = createControls();
-        panelRightDown.add(controlsPanel, BorderLayout.NORTH);
-        panelRightDown.add(datePanel, BorderLayout.CENTER);
-    }
-    
-    private ListCellRenderer<? super String> getRenderer() {
-        return new DefaultListCellRenderer(){
-            @Override
-            public Component getListCellRendererComponent(JList<?> list,
-                    Object value, int index, boolean isSelected,
-                    boolean cellHasFocus) {
-                JLabel listCellRendererComponent = 
-                        (JLabel) super.getListCellRendererComponent(
-                                list, value, index, isSelected,cellHasFocus);
-                listCellRendererComponent.setBorder(
-                        lowerEtchedBorder);
-                listCellRendererComponent.setEnabled(true);
-                return listCellRendererComponent;
-            }
-        };
-    }
-
-    public static void main(String[] args) {
-        // Run the GUI construction in the Event-Dispatching thread for thread-safety
-        SwingUtilities.invokeLater(new Runnable() {
-            @Override
-            public void run() {
-                new Gui(); // Let the constructor do the job
-            }
-        });
-    }
-
-    private void listReminders(JPanel parentPanel) {
+    private void listReminders(Boolean useSelectDate) {
+        GridBagConstraints c = new GridBagConstraints();
         DateFormat df = new SimpleDateFormat(dateFormat);
         String date = df.format(getDate());
         
-        List<Reminder> reminders = dbHandler.getRemindersOfDate(date);
+        c.fill = GridBagConstraints.BOTH;
+        c.gridx = 0;
+        c.weightx = 0.3;
+        c.weighty = 1;
         
-        for (int i = 0; i < reminders.size(); i++) {
-            reminders.get(i);
+        List<Reminder> reminders;
+        if (useSelectDate) {
+            reminders = dbHandler.getRemindersOfDate(date);
+        } else {
+            reminders = dbHandler.getRemindersWithID();
         }
         
         for (int i = 0; i < reminders.size(); i++) {
-            gridBagConstraints.fill = GridBagConstraints.BOTH;
-            gridBagConstraints.gridx = 0;
-            gridBagConstraints.gridy = i;
-            gridBagConstraints.weightx = 0.3;
-            //gridBagConstraints.weighty = 1.0;
+            c.gridy = i;
             
             Reminder reminder = reminders.get(i);
             String textValue = reminder.getTitle() + ": " + reminder.getBody();
             JTextArea textArea = new JTextArea(textValue);
             textArea.setBorder(lowerEtchedBorder);
             textArea.setLineWrap(true);
-            textArea.setBackground(parentPanel.getBackground());
+            textArea.setColumns(2);
+            textArea.setBackground(contentPane.getBackground());
             textArea.setWrapStyleWord(true);
             textArea.setEditable(false);
             textArea.addMouseListener(new MouseListener() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
                     displayItem.setText(textValue);
-                    javax.swing.SwingUtilities.invokeLater(new Runnable() {
-                        public void run() { 
-                            topScrollPane.getVerticalScrollBar().setValue(0);
-                        }
+                    SwingUtilities.invokeLater(() -> {
+                        topScrollPane.getVerticalScrollBar().setValue(0);
                     });
                 }
 
@@ -685,8 +636,19 @@ public class Gui extends JFrame {
                     //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
                 }
             });
-            panelLeftDown.add(textArea, gridBagConstraints);
+            if (useSelectDate) {
+                tabTwo.add(textArea, c);
+            } else {
+                tabOne.add(textArea, c);
+            }
         }
+        
+        SwingUtilities.invokeLater(() -> {
+                        scrollTabOne.getVerticalScrollBar().setValue(0);
+                    });
+        SwingUtilities.invokeLater(() -> {
+                        scrollTabTwo.getVerticalScrollBar().setValue(0);
+                    });
     }
     
 }
