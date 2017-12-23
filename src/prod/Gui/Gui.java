@@ -360,19 +360,19 @@ public class Gui extends JFrame {
         String[] parts = date.split("/");
         switch (parts.length) {
             case 3:
-                currentDisplayDate.set(Calendar.MONTH,
-                        Integer.valueOf(parts[0]) - 1);
                 currentDisplayDate.set(Calendar.DAY_OF_MONTH,
-                        Integer.valueOf(parts[1]));
+                        Integer.valueOf(parts[0]));
+                currentDisplayDate.set(Calendar.MONTH,
+                        Integer.valueOf(parts[1]) - 1);
                 currentDisplayDate.set(Calendar.YEAR,
                         expandYear(Integer.valueOf(parts[2])));
                 break;
             case 2:
                 currentDisplayDate = Calendar.getInstance();
-                currentDisplayDate.set(Calendar.MONTH,
-                        Integer.valueOf(parts[0]) - 1);
                 currentDisplayDate.set(Calendar.DAY_OF_MONTH,
-                        Integer.valueOf(parts[1]));
+                        Integer.valueOf(parts[0]));
+                currentDisplayDate.set(Calendar.MONTH,
+                        Integer.valueOf(parts[1]) - 1);
                 break;
             default:
                 // invalid date
