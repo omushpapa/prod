@@ -66,10 +66,7 @@ public class DatabaseHandler {
             // db parameters
             String url = "jdbc:sqlite:" + DB_PATH + DB_NAME;
             // create a connection to the database
-            connection = DriverManager.getConnection(url);
-            
-            System.out.println("Database connection established.");
-            
+            connection = DriverManager.getConnection(url);            
         } catch (SQLException e) {
             System.out.println(e.getMessage());
             connection = null;
@@ -238,6 +235,32 @@ public class DatabaseHandler {
         }
         
         return reminders;
+    }
+    
+    public String getRemindersCountOfDate(String stringDate) {        
+        String sql = "SELECT COUNT(*) FROM " + Tables.Prod.TABLE_NAME + 
+                " WHERE STRFTIME('%d/%m/%Y', " + Tables.Prod.COLUMN_DATE + 
+                "/1000, 'unixepoch', 'localtime') = ?";
+        Integer count = 0;
+        String returnValue = " ";
+        
+        try (Connection conn = getConnection();
+             PreparedStatement statement  = conn.prepareStatement(sql);){
+            
+            statement.setString(1, stringDate);
+            ResultSet resultSet = statement.executeQuery();
+            
+            // loop through the result set
+            while (resultSet.next())
+                count = resultSet.getInt(1);
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        if (count == 0) {
+            return returnValue;
+        } else {
+            return count.toString();
+        }
     }
     
     public List<Reminder> getRemindersOfMonth(String stringDate) {

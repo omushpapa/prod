@@ -40,6 +40,8 @@ import java.util.Date;
 import java.util.Iterator;
 import java.util.Scanner;
 import java.util.List;
+import javax.swing.SwingUtilities;
+import prod.Gui.Gui;
 
 /**
  *
@@ -57,54 +59,61 @@ public class Prod {
         boolean success = dbHandler.createTable();
         
         if (success) {
-            Reminder reminder = new Reminder("This is a reminder");
+            // Run the GUI construction in the Event-Dispatching thread for thread-safety
+            SwingUtilities.invokeLater(() -> {
+                new Gui("Prod - Reminder"); // Let the constructor do the job
+            });        
+        }
+    }
+    
+    public static void displayOptions() {
+        Reminder reminder = new Reminder("This is a reminder");
 
-            System.out.println("Reminder: " + reminder.getTitle());
+        System.out.println("Reminder: " + reminder.getTitle());
 
-            boolean proceed = true;
-            final String options = "1. Add reminder\n" + 
-                    "2. List reminders\n" + 
-                    "3. Edit reminder\n" + 
-                    "4. Search reminder\n" +
-                    "5. List reminders of date\n" +
-                    "6. List reminders of month\n" +
-                    "7. List reminders of year\n" +
-                    "8. Exit\n" +
-                    "Choice: ";
-            
-            while (proceed) {
-                System.out.println("\nChoose action:");
-                int choice = input.getInt(options);
-                
-                switch (choice) {
-                    case 1:
-                        addReminder();
-                        break;
-                    case 2:
-                        listReminders();
-                        break;
-                    case 3:
-                        editReminder();
-                        break;
-                    case 4:
-                        searchReminders();
-                        break;
-                    case 5:
-                        listRemindersOfDate();
-                        break;
-                    case 6:
-                        listRemindersOfMonth();
-                        break;
-                    case 7:
-                        listRemindersOfYear();
-                        break;
-                    case 8:
-                        System.exit(0);
-                        break;
-                    default:
-                        break;
-                }
-            }            
+        boolean proceed = true;
+        final String options = "1. Add reminder\n" + 
+                "2. List reminders\n" + 
+                "3. Edit reminder\n" + 
+                "4. Search reminder\n" +
+                "5. List reminders of date\n" +
+                "6. List reminders of month\n" +
+                "7. List reminders of year\n" +
+                "8. Exit\n" +
+                "Choice: ";
+
+        while (proceed) {
+            System.out.println("\nChoose action:");
+            int choice = input.getInt(options);
+
+            switch (choice) {
+                case 1:
+                    addReminder();
+                    break;
+                case 2:
+                    listReminders();
+                    break;
+                case 3:
+                    editReminder();
+                    break;
+                case 4:
+                    searchReminders();
+                    break;
+                case 5:
+                    listRemindersOfDate();
+                    break;
+                case 6:
+                    listRemindersOfMonth();
+                    break;
+                case 7:
+                    listRemindersOfYear();
+                    break;
+                case 8:
+                    System.exit(0);
+                    break;
+                default:
+                    break;
+            }
         }
     }
     

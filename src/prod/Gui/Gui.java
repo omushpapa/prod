@@ -33,7 +33,6 @@
 package prod.Gui;
 
 import java.awt.BorderLayout;
-import java.awt.CardLayout;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Dimension;
@@ -87,8 +86,8 @@ public class Gui extends JFrame {
     private final int windowHeight = 550;    
     private final Container contentPane;
     private final JMenuBar menuBar = new JMenuBar();
-    private GridBagLayout gridBagLayout = new GridBagLayout();
-    private GridBagConstraints gbc = new GridBagConstraints();
+    private final GridBagLayout gridBagLayout = new GridBagLayout();
+    private final GridBagConstraints gbc = new GridBagConstraints();
     private JPanel panelLeft, panelRight, 
             panelLeftTop, panelLeftDown,
             panelRightTop, panelRightDown,
@@ -96,17 +95,19 @@ public class Gui extends JFrame {
     private final JPanel tabOne = new JPanel();
     private final JPanel tabTwo = new JPanel();
     private JTabbedPane tabbedPane;
-    private CardLayout cardLayout = new CardLayout();
     private GridLayout gridLayout = new GridLayout();
-    private JTextArea displayItem = new JTextArea("Hello, left top!");
-    private Border lowerEtchedBorder = 
+    private JTextArea displayItem = new JTextArea("Hello, "
+            + "selected reminder will be shown here!");
+    private final Border lowerEtchedBorder = 
             BorderFactory.createEtchedBorder(EtchedBorder.LOWERED);
     private JScrollPane topScrollPane = new JScrollPane();
     private JScrollPane scrollTabOne, scrollTabTwo;
     private BorderLayout borderLayout = new BorderLayout();
+    private JButton selectDateButton = null;
     
     // Date variables
     protected Calendar currentDisplayDate;
+    protected final int currentDayOfMonth;
 
     protected JButton prevMonth;
     protected JButton nextMonth;
@@ -117,12 +118,12 @@ public class Gui extends JFrame {
     protected SimpleDateFormat dayName   = new SimpleDateFormat("d");
     protected SimpleDateFormat monthName = new SimpleDateFormat("MMMM");
 
-    protected String iconFile = "datepicker.gif";
     protected String[] weekdayNames = 
         {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
     
-    public Gui() {
+    public Gui(String title) {
         currentDisplayDate   = Calendar.getInstance();
+        currentDayOfMonth = currentDisplayDate.get(Calendar.DAY_OF_MONTH);
         contentPane = getContentPane();
         contentPane.setLayout(gridBagLayout);
         
@@ -131,7 +132,7 @@ public class Gui extends JFrame {
         createStatusBar();
         
         this.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
-        setTitle("Prod - Reminder"); 
+        setTitle(title); 
         setSize(windowWidth, windowHeight);
         setLocationRelativeTo(null);
         setVisible(true);
@@ -262,18 +263,16 @@ public class Gui extends JFrame {
         c.gridy      = 0;
         c.gridwidth  = 7;
         c.gridheight = 1;
+        c.weightx    = 0.1428571428571429;      // 1/7 columns
+        c.weighty    = 0.125;                   // 1/8 rows
         JLabel title = new JLabel(month + " " + year);
         datePanel.add(title, c);
         Font font      = title.getFont();
-//        Font titleFont = new Font(font.getName(), font.getStyle(),
-//              font.getSize() + 2);
         Font weekFont = new Font(font.getName(), font.getStyle(),
                 font.getSize() - 2);
         title.setFont(font);
 
         c.gridy      = 1;
-        c.weightx    = 0.1;
-        c.weighty    = 0.1;
         c.gridwidth  = 1;
         c.gridheight = 1;
         c.fill = GridBagConstraints.BOTH;
@@ -288,52 +287,77 @@ public class Gui extends JFrame {
         calendar.set(Calendar.DATE, 1);
         calendar.add(Calendar.DATE, -calendar.get(Calendar.DAY_OF_WEEK) + 1);
         int monthInt = currentDisplayDate.get(Calendar.MONTH);
-//      monthInt = 0;
 
         c.gridwidth  = 1;
         c.gridheight = 1;
 
         for (c.gridy = 2; c.gridy < 8; c.gridy++) {
             for (c.gridx = 0; c.gridx < 7; c.gridx++) {
-                JButton dayButton;
+                JButton dayButton = new JButton();;
+                JLabel dayLabel;
                 
                 if (calendar.get(Calendar.MONTH) == monthInt) {
                     String dayString = dayName.format(calendar.getTime());
                     if (calendar.get(Calendar.DAY_OF_MONTH) < 10) {
                         dayString = " " + dayString;
                     }
-                        
-                    dayButton = new JButton(dayString);
+                    
+                    dayButton.setText(dayString);
+                    dayButton.setBorderPainted(true);
+                    String formattedDate = calendar.get(
+                            Calendar.DAY_OF_MONTH) + "/" +
+                            (calendar.get(Calendar.MONTH) + 1) + "/" +
+                            calendar.get(Calendar.YEAR);
+                    dayLabel = new JLabel(
+                            dbHandler.getRemindersCountOfDate(formattedDate),
+                            SwingConstants.TRAILING);
                 } else {
-                    dayButton = new JButton();
                     dayButton.setEnabled(false);
+                    dayButton.setBorderPainted(false);
+                    dayLabel = new JLabel(" ",
+                            SwingConstants.TRAILING);
+                    
                 }
                 
+                dayLabel.setFont(new Font("Serif", Font.PLAIN, 8));
+                dayLabel.setForeground(Color.red);
                 datePanel.add(dayButton, c);
                 Color color = dayButton.getBackground();
                 if ((calendar.get(Calendar.DAY_OF_MONTH) == getDay()) &&
-                        (calendar.get(Calendar.MONTH) == monthInt)) { 
+                        (calendar.get(Calendar.MONTH) == monthInt)) {
+                    dayButton.setContentAreaFilled(true);
                     dayButton.setBackground(Color.yellow);
-                //  dayButton.setFocusPainted(true);
-                //  dayButton.setSelected(true);
-                } else
+                } else {
+                    dayButton.setContentAreaFilled(false);
                     dayButton.setBackground(color);
+                }
+                dayButton.add(dayLabel);
+                dayButton.setLayout(new GridLayout(2, 1));
+                dayButton.setFocusPainted(false);
                 dayButton.setFont(weekFont);
                 dayButton.setFocusable(true);
                 dayButton.setMargin(new Insets(5,5,5,5));
                 dayButton.addActionListener((ActionEvent e) -> {
+                    if (selectDateButton != null) {
+                        if (selectDateButton.getText().equals(
+                                String.valueOf(currentDayOfMonth))) {
+                            selectDateButton.setBackground(Color.yellow);
+                        } else {
+                            selectDateButton.setContentAreaFilled(false);
+                        }
+                    }
+                    selectDateButton = dayButton;
+                    dayButton.setContentAreaFilled(true);
+                    dayButton.setBackground(Color.CYAN);
                     changeDay(e.getActionCommand());
                     tabTwo.removeAll();
                     listReminders(true);
                     validate();
                     repaint();
-                    tabbedPane.setSelectedIndex(1);
-                    System.out.println("The date is " + getFormattedDate());
-                    System.out.println("Date is " + currentDisplayDate.getTime().toString());
+                    tabbedPane.setSelectedComponent(scrollTabTwo);
                 });
                 calendar.add(Calendar.DATE, +1);
             }
-         // if (draw.get(Calendar.MONTH) != monthInt) break;
         }
         return datePanel;
     }
@@ -455,13 +479,6 @@ public class Gui extends JFrame {
         configurePanelLeft();
         configurePanelRight();
     }
-    
-    public static void main(String[] args) {
-        // Run the GUI construction in the Event-Dispatching thread for thread-safety
-        SwingUtilities.invokeLater(() -> {
-            new Gui(); // Let the constructor do the job
-        });
-    }
 
     private void configurePanelLeft() {
         panelLeftTop = new JPanel(gridLayout);
@@ -519,11 +536,6 @@ public class Gui extends JFrame {
         tabbedPane.add(scrollTabOne, "All");
         tabbedPane.add(scrollTabTwo, "Selected Date");
         
-        /*for (int i=0; i < 25; i++) {
-            JLabel label = new JLabel("Label " + i);
-            tabOne.add(label);
-        }*/
-        
         listReminders(false);
         
         listReminders(true);
@@ -531,7 +543,7 @@ public class Gui extends JFrame {
 
     private void configurePanelRight() {
         panelRightTop = new JPanel();
-        panelRightDown = new JPanel(borderLayout);
+        panelRightDown = new JPanel(gridBagLayout);
         panelRightTop.setBorder(
                 BorderFactory.createMatteBorder(
                         1, 1, 1, 1, Color.YELLOW));
@@ -557,25 +569,34 @@ public class Gui extends JFrame {
         c.gridy = 0;
         c.weightx = 1.0;
         c.weighty = 0.1;
-        //panelRightDown.setLayout(new BorderLayout());
+        
         datePanel = createDatePicker();
         controlsPanel = createControls();
-        panelRightDown.add(controlsPanel, BorderLayout.NORTH);
-        panelRightDown.add(datePanel, BorderLayout.CENTER);
+        populatePanelRightDown(controlsPanel, datePanel);
     }
     
-    private void refreshPanelRightDown() {
-        datePanel = new JPanel();
-        controlsPanel = new JPanel();
-        
+    private void refreshPanelRightDown() {        
         datePanel = createDatePicker();
         controlsPanel = createControls();
         
         panelRightDown.removeAll();
-        panelRightDown.add(controlsPanel, BorderLayout.NORTH);
-        panelRightDown.add(datePanel, BorderLayout.CENTER);
+        populatePanelRightDown(controlsPanel, datePanel);
         validate();
         repaint();
+    }
+    
+    private void populatePanelRightDown(JPanel controlsPanel, JPanel datePanel) {
+        GridBagConstraints gbc = new GridBagConstraints();
+        gbc.fill = GridBagConstraints.BOTH;
+        gbc.gridx = 0;
+        gbc.gridy = 0;
+        gbc.weightx = 1.0;
+        gbc.weighty = 0.1;
+        
+        panelRightDown.add(controlsPanel, gbc);
+        gbc.gridy = 1;
+        gbc.weighty = 0.9;
+        panelRightDown.add(datePanel, gbc);
     }
     
     private void listReminders(Boolean useSelectDate) {
@@ -618,22 +639,22 @@ public class Gui extends JFrame {
 
                 @Override
                 public void mousePressed(MouseEvent e) {
-                    //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    // Do nothing
                 }
 
                 @Override
                 public void mouseReleased(MouseEvent e) {
-                    //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    // Do nothing
                 }
 
                 @Override
                 public void mouseEntered(MouseEvent e) {
-                    //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    // Do nothing
                 }
 
                 @Override
                 public void mouseExited(MouseEvent e) {
-                    //throw new UnsupportedOperationException("Not supported yet."); //To change body of generated methods, choose Tools | Templates.
+                    // Do nothing
                 }
             });
             if (useSelectDate) {
