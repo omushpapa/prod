@@ -37,8 +37,6 @@ import java.text.DateFormat;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
-import java.util.Iterator;
-import java.util.Scanner;
 import java.util.List;
 import javax.swing.SwingUtilities;
 import prod.Gui.Gui;

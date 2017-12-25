@@ -389,4 +389,31 @@ public class DatabaseHandler {
         return success;
     }
     
+    public Reminder getReminderWithRowID(int id) {
+        Reminder reminder = null;
+        String sql = "SELECT rowid,* FROM " + Tables.Prod.TABLE_NAME + 
+                " WHERE rowid = ?";
+        
+        try (Connection conn = getConnection();
+             PreparedStatement statement  = conn.prepareStatement(sql);){
+            
+            statement.setInt(1, id);
+            ResultSet resultSet = statement.executeQuery();
+            
+            // loop through the result set
+            while (resultSet.next()) {
+                Integer rowid = resultSet.getInt("rowid");
+                String title = resultSet.getString(Tables.Prod.COLUMN_TITLE);
+                String body = resultSet.getString(Tables.Prod.COLUMN_BODY);
+                Date date = resultSet.getDate(Tables.Prod.COLUMN_DATE);
+                reminder = new Reminder(title, body, date);
+                reminder.setRowID(rowid);
+            }
+        } catch (SQLException e) {
+            System.out.println(e.getMessage());
+        }
+        
+        return reminder;
+    }
+    
 }

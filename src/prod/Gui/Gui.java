@@ -64,6 +64,7 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
+import javax.swing.JTextPane;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.border.BevelBorder;
@@ -78,9 +79,9 @@ import static prod.Models.Reminder.dateFormat;
  * @author giantas
  */
 
-
 public class Gui extends JFrame {
     
+    public static final String RESOURCES_PATH = "../resources/";
     private final DatabaseHandler dbHandler = new DatabaseHandler("prod.db");
     private final int windowWidth = 700;
     private final int windowHeight = 550;    
@@ -96,14 +97,15 @@ public class Gui extends JFrame {
     private final JPanel tabTwo = new JPanel();
     private JTabbedPane tabbedPane;
     private GridLayout gridLayout = new GridLayout();
-    private JTextArea displayItem = new JTextArea("Hello, "
-            + "selected reminder will be shown here!");
+    private JTextPane displayItem = new JTextPane();
     private final Border lowerEtchedBorder = 
             BorderFactory.createEtchedBorder(EtchedBorder.LOWERED);
     private JScrollPane topScrollPane = new JScrollPane();
     private JScrollPane scrollTabOne, scrollTabTwo;
     private BorderLayout borderLayout = new BorderLayout();
     private JButton selectDateButton = null;
+    private JTextArea selectListItem = null;
+    private JPanel displayItemControls;
     
     // Date variables
     protected Calendar currentDisplayDate;
@@ -481,7 +483,7 @@ public class Gui extends JFrame {
     }
 
     private void configurePanelLeft() {
-        panelLeftTop = new JPanel(gridLayout);
+        panelLeftTop = new JPanel(gridBagLayout);
         panelLeftDown = new JPanel(gridLayout);
         tabbedPane = new JTabbedPane();
         panelLeftTop.setBorder(
@@ -504,16 +506,32 @@ public class Gui extends JFrame {
         
         // Display Area
         displayItem.setBorder(lowerEtchedBorder);
-        displayItem.setLineWrap(true);
-        displayItem.setBackground(contentPane.getBackground());
-        displayItem.setWrapStyleWord(true);
+        displayItem.setText("Hello, selected reminder will be shown here!");
+        displayItem.setDisabledTextColor(Color.BLACK);
         displayItem.setPreferredSize(panelLeftTop.getSize());
+        displayItem.setEnabled(false);
         // topScrollPane
         topScrollPane.getVerticalScrollBar().setUnitIncrement(3);
         topScrollPane.setViewportView(displayItem);
         topScrollPane.setHorizontalScrollBarPolicy(
                 JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        panelLeftTop.add(topScrollPane);
+        
+        // Panel Left Top
+        GridBagConstraints bc = new GridBagConstraints();
+        bc.fill = GridBagConstraints.BOTH;
+        bc.gridx = 0;
+        bc.gridy = 0;
+        bc.weightx = 0.95;
+        bc.weighty = 1;
+        panelLeftTop.add(topScrollPane, bc);
+        
+        displayItemControls = new JPanel(gridBagLayout);
+        displayItemControls.setBorder(lowerEtchedBorder);
+        bc.gridx = 1;
+        bc.weightx = 0.05;
+        panelLeftTop.add(displayItemControls, bc);
+        
+        addControlButtons();
         
         // Bottom Panel
         tabOne.setLayout(gridBagLayout);
@@ -539,6 +557,43 @@ public class Gui extends JFrame {
         listReminders(false);
         
         listReminders(true);
+    }
+    
+    private void addControlButtons() {
+        Dimension dimension = new Dimension(30, 25);
+        GridBagConstraints bc = new GridBagConstraints();
+        bc.gridx = 0;
+        bc.gridy = 0;
+        bc.weightx = 1;
+        bc.weighty = 0.25;
+        
+        ImageButton editItem = new ImageButton(
+                "pencil_black.png", ImageButton.EDIT, dbHandler);
+        editItem.setPreferredSize(dimension);
+        editItem.setToolTipText("Edit");
+        editItem.setComponent(displayItem);
+        editItem.create();
+        
+        ImageButton quickEditItem = new ImageButton(
+                "instapaper_black.png", 
+                ImageButton.QUICK_EDIT, dbHandler);
+        quickEditItem.setPreferredSize(dimension);
+        quickEditItem.setToolTipText("Quick Edit");
+        quickEditItem.setComponent(displayItem);
+        quickEditItem.create();
+        
+        ImageButton saveItem = new ImageButton(
+                "content-save_black.png", ImageButton.SAVE, dbHandler);
+        saveItem.setPreferredSize(dimension);
+        saveItem.setToolTipText("Save Changes");
+        saveItem.setComponent(displayItem);
+        saveItem.create();
+        
+        displayItemControls.add(editItem, bc);
+        bc.gridy = 1;
+        displayItemControls.add(quickEditItem, bc);
+        bc.gridy = 2;
+        displayItemControls.add(saveItem, bc);
     }
 
     private void configurePanelRight() {
@@ -620,8 +675,8 @@ public class Gui extends JFrame {
             c.gridy = i;
             
             Reminder reminder = reminders.get(i);
-            String textValue = reminder.getTitle() + ": " + reminder.getBody();
-            JTextArea textArea = new JTextArea(textValue);
+            String textValue = "" + reminder.getTitle() + ": " + reminder.getBody();
+            JTextArea textArea = new JTextArea(reminder.getTitle());
             textArea.setBorder(lowerEtchedBorder);
             textArea.setLineWrap(true);
             textArea.setColumns(2);
@@ -631,10 +686,17 @@ public class Gui extends JFrame {
             textArea.addMouseListener(new MouseListener() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    displayItem.setText(textValue);
+                    displayItem.setText(reminder.getBody());
+                    displayItem.setName(String.valueOf(reminder.getRowID()));
+                    displayItem.setEnabled(false);
                     SwingUtilities.invokeLater(() -> {
                         topScrollPane.getVerticalScrollBar().setValue(0);
                     });
+                    if (selectListItem != null) {
+                        selectListItem.setBackground(contentPane.getBackground());
+                    }
+                    selectListItem = textArea;
+                    textArea.setBackground(Color.CYAN);                    
                 }
 
                 @Override
