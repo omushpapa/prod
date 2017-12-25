@@ -125,7 +125,7 @@ public class Gui extends JFrame {
     
     public Gui(String title) {
         currentDisplayDate   = Calendar.getInstance();
-        currentDayOfMonth = currentDisplayDate.get(Calendar.DAY_OF_MONTH);
+        currentDayOfMonth = getCurrentDay();
         contentPane = getContentPane();
         contentPane.setLayout(gridBagLayout);
         
@@ -196,6 +196,14 @@ public class Gui extends JFrame {
 
     public int getDay() {
         return currentDisplayDate.get(Calendar.DAY_OF_MONTH);
+    }
+    
+    public int getCurrentDay() {
+        DateFormat dateFormat = new SimpleDateFormat("dd");
+        Calendar ycalendar = Calendar.getInstance();
+        ycalendar.get(Calendar.DATE);
+        return Integer.valueOf(
+                dateFormat.format(ycalendar.getTime()));
     }
 
     public int getYear() {
@@ -325,7 +333,7 @@ public class Gui extends JFrame {
                 dayLabel.setForeground(Color.red);
                 datePanel.add(dayButton, c);
                 Color color = dayButton.getBackground();
-                if ((calendar.get(Calendar.DAY_OF_MONTH) == getDay()) &&
+                if ((calendar.get(Calendar.DAY_OF_MONTH) == getCurrentDay()) &&
                         (calendar.get(Calendar.MONTH) == monthInt)) {
                     dayButton.setContentAreaFilled(true);
                     dayButton.setBackground(Color.yellow);
