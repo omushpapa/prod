@@ -31,6 +31,9 @@
  */
 package prod;
 
+import prod.Config.ConfigKeys;
+import prod.Config.ConfigHandler;
+import java.awt.Window;
 import prod.Models.Reminder;
 import prod.Database.DatabaseHandler;
 import java.text.DateFormat;
@@ -38,7 +41,12 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
+import javax.swing.JFrame;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 import prod.Gui.Gui;
 
 /**
@@ -48,18 +56,23 @@ import prod.Gui.Gui;
 public class Prod {
     
     static Input input = new Input();
-    static final DatabaseHandler dbHandler = new DatabaseHandler("prod.db");
+    static DatabaseHandler dbHandler;
+    static final ConfigHandler config = new ConfigHandler();
 
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
+        config.create();
+        dbHandler = new DatabaseHandler(
+                config.getProperty(ConfigKeys.DB_NAME, "prod.db"));
         boolean success = dbHandler.createTable();
         
         if (success) {
             // Run the GUI construction in the Event-Dispatching thread for thread-safety
             SwingUtilities.invokeLater(() -> {
-                new Gui("Prod - Reminder"); // Let the constructor do the job
+                // The constructor will do the job
+                new Gui("Prod - Reminder", dbHandler, config); 
             });        
         }
     }

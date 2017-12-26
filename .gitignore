@@ -34,3 +34,4 @@ nb-configuration.xml
 # Database
 *.db
 *.sqlite
+*.properties

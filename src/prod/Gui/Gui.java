@@ -42,6 +42,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
+import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
@@ -51,6 +52,8 @@ import java.text.SimpleDateFormat;
 import java.util.Calendar;
 import java.util.Date;
 import java.util.List;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -59,6 +62,7 @@ import javax.swing.JLabel;
 import javax.swing.JMenu;
 import javax.swing.JMenuBar;
 import javax.swing.JMenuItem;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
@@ -67,12 +71,17 @@ import javax.swing.JTextField;
 import javax.swing.JTextPane;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
+import javax.swing.UIManager;
+import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
+import prod.Config.ConfigKeys;
+import prod.Config.ConfigHandler;
 import prod.Database.DatabaseHandler;
 import prod.Models.Reminder;
 import static prod.Models.Reminder.dateFormat;
+import prod.Prod;
 
 /**
  *
@@ -82,7 +91,8 @@ import static prod.Models.Reminder.dateFormat;
 public class Gui extends JFrame {
     
     public static final String RESOURCES_PATH = "../resources/";
-    private final DatabaseHandler dbHandler = new DatabaseHandler("prod.db");
+    private final DatabaseHandler dbHandler;
+    private final ConfigHandler config;
     private final int windowWidth = 700;
     private final int windowHeight = 550;    
     private final Container contentPane;
@@ -123,7 +133,10 @@ public class Gui extends JFrame {
     protected String[] weekdayNames = 
         {"Sun", "Mon", "Tue", "Wed", "Thu", "Fri", "Sat"};
     
-    public Gui(String title) {
+    public Gui(String title, DatabaseHandler handler, ConfigHandler manager) {
+        this.dbHandler = handler;
+        this.config = manager;
+        applyLook();
         currentDisplayDate   = Calendar.getInstance();
         currentDayOfMonth = getCurrentDay();
         contentPane = getContentPane();
@@ -431,12 +444,131 @@ public class Gui extends JFrame {
         eMenuItem.addActionListener((ActionEvent event) -> {
             System.exit(0);
         });
+        
+        JMenu options = new JMenu("Options");
+        JMenu look = new JMenu("Look");
+        
+        JMenuItem nimbus = new JMenuItem("Nimbus");
+        nimbus.addActionListener((ActionEvent e) -> {
+            if (allowLookAndFeelChange("Nimbus")) {
+                config.setProperty(ConfigKeys.LOOK, "Nimbus");
+                restartGui();
+            }
+        });
+        JMenuItem metal = new JMenuItem("Metal");
+        metal.addActionListener((ActionEvent e) -> {
+            if (allowLookAndFeelChange("Metal")) {
+                config.setProperty(ConfigKeys.LOOK, "Metal");
+                restartGui();
+            }
+        });
+        JMenuItem gtk = new JMenuItem("GTK");
+        gtk.addActionListener((ActionEvent e) -> {
+            if (allowLookAndFeelChange("GTK")) {
+                config.setProperty(ConfigKeys.LOOK, "GTK");
+                restartGui();
+            }
+        });
+        JMenuItem motif = new JMenuItem("Motif");
+        motif.addActionListener((ActionEvent e) -> {
+            if (allowLookAndFeelChange("Motif")) {
+                config.setProperty(ConfigKeys.LOOK, "Motif");
+                restartGui();
+            }
+        });
+        JMenuItem windows = new JMenuItem("Classic Windows");
+        windows.addActionListener((ActionEvent e) -> {
+            if (allowLookAndFeelChange("Classic Windows")) {
+                config.setProperty(ConfigKeys.LOOK, "Windows");
+                restartGui();
+            }
+        });
+        JMenuItem multi = new JMenuItem("Multi");
+        multi.addActionListener((ActionEvent e) -> {
+            if (allowLookAndFeelChange("Multi")) {
+                config.setProperty(ConfigKeys.LOOK, "Synth");
+                restartGui();
+            }
+        });
+        
+        String definedLook = config.getProperty(ConfigKeys.LOOK, "Metal");
+        if (!definedLook.equals(nimbus.getText())) {
+            look.add(nimbus);
+        }
+        if (!definedLook.equals(metal.getText())) {
+            look.add(metal);
+        }
+        if (!definedLook.equals(gtk.getText())) {
+            look.add(gtk);
+        }
+        if (!definedLook.equals(motif.getText())) {
+            look.add(motif);
+        }
+        if (!definedLook.equals(windows.getText())) {
+            look.add(windows);
+        }
+        if (!definedLook.equals(multi.getText())) {
+            look.add(multi);
+        }
 
         file.add(eMenuItem);
+        options.add(look);
 
         menuBar.add(file);
+        menuBar.add(options);
 
         setJMenuBar(menuBar);
+    }
+    
+    private boolean allowLookAndFeelChange(String theme) {
+        boolean close = false;
+        String message = "Do you want to change to '" + theme + "' look?\n\n"
+                + "Note: Changes may NOT be full applied until restart!\n"
+                + "\tNot all Looks may be available for your system.";
+        int reply = JOptionPane.showConfirmDialog(
+                this, message, "Change Look", JOptionPane.YES_NO_OPTION);
+        if (reply == JOptionPane.YES_OPTION) {
+          close = true;
+        }
+        return close;
+    }
+    
+    private void applyLook() {
+        try {
+            UIManager.setLookAndFeel(
+                    getLookAndFeelClassName(
+                            config.getProperty(ConfigKeys.LOOK, "Metal")));
+        } catch (ClassNotFoundException | InstantiationException | 
+                IllegalAccessException | UnsupportedLookAndFeelException | 
+                NullPointerException ex) {
+            Logger.getLogger(Prod.class.getName()).log(
+                    Level.SEVERE, null, ex);
+        }
+
+        for(Window window : JFrame.getWindows()) {
+            SwingUtilities.updateComponentTreeUI(window);
+        }
+    }
+    
+    private static String getLookAndFeelClassName(String nameSnippet) {
+        UIManager.LookAndFeelInfo[] plafs = UIManager.getInstalledLookAndFeels();
+        for (UIManager.LookAndFeelInfo info : plafs) {
+            if (info.getName().contains(nameSnippet)) {
+                return info.getClassName();
+            }
+        }
+        return null;
+    }
+    
+    public void restartGui() {
+        dispose();
+        try {
+            Thread.sleep(1000);
+        } catch(InterruptedException ex) {
+            Thread.currentThread().interrupt();
+        }
+        
+        new Gui(this.getTitle(), this.dbHandler, this.config);
     }
 
     private void createStatusBar() {
@@ -547,18 +679,12 @@ public class Gui extends JFrame {
         panelLeftDown.add(tabbedPane);
         
         // ScrollPanes
+        Dimension d = new Dimension(
+                panelLeftDown.getWidth(), panelLeftDown.getHeight());
         scrollTabOne = new JScrollPane(tabOne);
-        scrollTabOne.setPreferredSize(
-                new Dimension(
-                        panelLeftDown.getWidth(),
-                        panelLeftDown.getHeight())
-        );
+        scrollTabOne.setPreferredSize(d);
         scrollTabTwo = new JScrollPane(tabTwo);
-        scrollTabTwo.setPreferredSize(
-                new Dimension(
-                        panelLeftDown.getWidth(),
-                        panelLeftDown.getHeight())
-        );
+        scrollTabTwo.setPreferredSize(d);
         tabbedPane.add(scrollTabOne, "All");
         tabbedPane.add(scrollTabTwo, "Selected Date");
         
