@@ -1,6 +1,6 @@
-/* 
+/*
  * BSD 3-Clause License
- *
+ * 
  * Copyright (c) 2017, Aswa Paul
  * All rights reserved.
  * 
@@ -20,7 +20,7 @@
  * 
  * THIS SOFTWARE IS PROVIDED BY THE COPYRIGHT HOLDERS AND CONTRIBUTORS "AS IS"
  * AND ANY EXPRESS OR IMPLIED WARRANTIES, INCLUDING, BUT NOT LIMITED TO, THE
- * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE*  ARE
+ * IMPLIED WARRANTIES OF MERCHANTABILITY AND FITNESS FOR A PARTICULAR PURPOSE ARE
  * DISCLAIMED. IN NO EVENT SHALL THE COPYRIGHT HOLDER OR CONTRIBUTORS BE LIABLE
  * FOR ANY DIRECT, INDIRECT, INCIDENTAL, SPECIAL, EXEMPLARY, OR CONSEQUENTIAL
  * DAMAGES (INCLUDING, BUT NOT LIMITED TO, PROCUREMENT OF SUBSTITUTE GOODS OR
@@ -29,12 +29,10 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-
 package prod.Gui;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dialog;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Insets;
@@ -42,9 +40,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.IOException;
 import javax.imageio.ImageIO;
+import javax.swing.Action;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JFrame;
 import javax.swing.JOptionPane;
 import javax.swing.JTextPane;
 import javax.swing.border.Border;
@@ -56,22 +54,24 @@ import prod.Models.Reminder;
  *
  * @author giantas
  */
-
-
-public class ImageButton extends JButton implements MouseListener {
-    public static final String SAVE = "save";
+public class FormatButton extends JButton {
+    public static final String BOLD = "save";
     public static final String QUICK_EDIT = "quickEdit";
     public static final String EDIT = "edit";
     private static String iconFile;
-    private static DatabaseHandler dbHandler;
     public Component component;
-    private int scaledWidth = 15;
-    private int scaledHeight = 15;
+    private int scaledWidth = 20;
+    private int scaledHeight = 20;
     
-    public ImageButton(String iconFile, String buttonName, DatabaseHandler dbHandler) {
+    public FormatButton(String iconFile) {
         this.iconFile = iconFile;
-        this.dbHandler = dbHandler;
-        setName(buttonName);
+        setDefaults();
+    }
+    
+    public FormatButton(String iconFile, Action a) {
+        this.iconFile = iconFile;
+        setAction(a);
+        setDefaults();
     }
     
     public void setComponent(Component c) {
@@ -94,11 +94,12 @@ public class ImageButton extends JButton implements MouseListener {
         return this.scaledHeight;
     }
     
-    public void create() {
+    public void setDefaults() {
         setIcon(getScaledIcon());
         setBorder(new RoundedBorder(5));
-        setContentAreaFilled(false);
-        addMouseListener(this);
+        //setContentAreaFilled(false);
+        setText("");
+        setEnabled(true);
     }
     
     private ImageIcon getScaledIcon() {
@@ -114,71 +115,6 @@ public class ImageButton extends JButton implements MouseListener {
             icon = null;
         }
         return icon;
-    }
-    
-    @Override
-    public void mouseClicked(MouseEvent e) {
-        String rowString = component.getName();
-        if (rowString != null) {
-            int rowId = Integer.valueOf(rowString.trim());
-            Reminder reminder = dbHandler.getReminderWithRowID(rowId);
-            applyAction(reminder);
-        } else {
-            JOptionPane.showMessageDialog(
-                    component.getParent(), "Select a reminder first");
-        }
-    }
-
-    @Override
-    public void mousePressed(MouseEvent e) {
-        // Do nothing
-    }
-
-    @Override
-    public void mouseReleased(MouseEvent e) {
-        // Do nothing
-    }
-
-    @Override
-    public void mouseEntered(MouseEvent e) {
-        setContentAreaFilled(true);
-        setBackground(Color.LIGHT_GRAY);
-    }
-
-    @Override
-    public void mouseExited(MouseEvent e) {
-        setContentAreaFilled(false);
-    }
-
-    private void applyAction(Reminder reminder) {
-        switch(getName()) {
-            case QUICK_EDIT:
-                component.setEnabled(true);
-                break;
-            case SAVE:
-                if (component instanceof JTextPane) {
-                    JTextPane textPane = (JTextPane) component;
-                    String body = textPane.getText();
-                    reminder.setBody(body);
-                    int result = dbHandler.updateReminder(reminder);
-                    
-                    String message = null;
-                    if (result > 0) { 
-                        message = "Changes saved successfully!";
-                        
-                    } else {
-                        message = "Changes could NOT be saved!";
-                    }
-                    JOptionPane.showMessageDialog(component.getParent(), message);
-                }
-                break;
-            case EDIT:
-                new ItemEditor(reminder, dbHandler);
-                break;
-            default:
-                //
-                     
-        }
     }
     
     private static class RoundedBorder implements Border {
