@@ -31,10 +31,13 @@
  */
 package prod.Gui;
 
+import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Insets;
+import java.awt.event.MouseEvent;
+import java.awt.event.MouseListener;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.swing.Action;
@@ -47,12 +50,9 @@ import static prod.Gui.Gui.RESOURCES_PATH;
  *
  * @author giantas
  */
-public class FormatButton extends JButton {
-    public static final String BOLD = "save";
-    public static final String QUICK_EDIT = "quickEdit";
-    public static final String EDIT = "edit";
-    private static String iconFile;
-    public Component component;
+public class FormatButton extends JButton implements MouseListener {
+    
+    private String iconFile;
     private int scaledWidth = 20;
     private int scaledHeight = 20;
     
@@ -64,11 +64,8 @@ public class FormatButton extends JButton {
     public FormatButton(String iconFile, Action a) {
         this.iconFile = iconFile;
         setAction(a);
+        addMouseListener(this);
         setDefaults();
-    }
-    
-    public void setComponent(Component c) {
-        this.component = c;
     }
     
     public void setScaledWidth(int width) {
@@ -90,7 +87,7 @@ public class FormatButton extends JButton {
     public void setDefaults() {
         setIcon(getScaledIcon());
         setBorder(new RoundedBorder(5));
-        //setContentAreaFilled(false);
+        setContentAreaFilled(false);
         setText("");
         setEnabled(true);
     }
@@ -108,6 +105,26 @@ public class FormatButton extends JButton {
             icon = null;
         }
         return icon;
+    }
+
+    @Override
+    public void mouseClicked(MouseEvent e) {}
+    
+    @Override
+    public void mousePressed(MouseEvent e) {}
+
+    @Override
+    public void mouseReleased(MouseEvent e) {}
+
+    @Override
+    public void mouseEntered(MouseEvent e) {
+        setContentAreaFilled(true);
+        setBackground(Color.LIGHT_GRAY);
+    }
+
+    @Override
+    public void mouseExited(MouseEvent e) {
+        setContentAreaFilled(false);
     }
     
     private static class RoundedBorder implements Border {

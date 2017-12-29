@@ -214,10 +214,14 @@ public class ItemEditor extends JDialog {
             public void mouseReleased(MouseEvent e) {}
 
             @Override
-            public void mouseEntered(MouseEvent e) {}
+            public void mouseEntered(MouseEvent e) {
+                save.mouseEntered(e);
+            }
 
             @Override
-            public void mouseExited(MouseEvent e) {}
+            public void mouseExited(MouseEvent e) {
+                save.mouseExited(e);
+            }
         });
         
         GridBagConstraints c = new GridBagConstraints();
@@ -274,8 +278,23 @@ public class ItemEditor extends JDialog {
     }
     
     private void updateButtons() {
-        redo.setEnabled(undoManager.canRedo());
-        undo.setEnabled(undoManager.canUndo());
+        if (undoManager.canRedo()) {
+            redo.setEnabled(true);
+            redo.addMouseListener(redo);
+        } else {
+            redo.setContentAreaFilled(false);
+            redo.setEnabled(false);
+            redo.removeMouseListener(redo);
+        }
+        
+        if (undoManager.canUndo()) {
+            undo.setEnabled(true);
+            undo.addMouseListener(undo);
+        } else {
+            undo.setContentAreaFilled(false);
+            undo.setEnabled(false);
+            undo.removeMouseListener(undo);
+        }
     }
     
     private boolean saveReminderChanges() {

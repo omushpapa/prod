@@ -42,6 +42,7 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
+import java.awt.Rectangle;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
@@ -650,14 +651,13 @@ public class Gui extends JFrame {
         c.weightx = 1.0;
         panelLeft.add(panelLeftTop, c);
         c.gridy = 1;
-        c.weighty = 0.7;
+        c.weighty = 0.65;
         panelLeft.add(panelLeftDown, c);
         
         // Display Area
         displayItem.setBorder(lowerEtchedBorder);
         displayItem.setDocumentText("Hello, selected reminder will be shown here!");
         displayItem.setDisabledTextColor(Color.BLACK);
-        displayItem.setPreferredSize(panelLeftTop.getSize());
         displayItem.setEnabled(false);        
         htmlKit = (HTMLEditorKit) displayItem.getEditorKit();
         styledDoc = displayItem.getStyledDocument();
@@ -678,9 +678,11 @@ public class Gui extends JFrame {
                 } catch (CannotRedoException cre) {}
             }
         });
-        
+                
         // topScrollPane
         topScrollPane = displayItem.getScrollPane();
+        // Fixes scroll pane distorting on resize 
+        topScrollPane.setPreferredSize(new Dimension(60, 60));
         
         // Panel Left Top
         GridBagConstraints bc = new GridBagConstraints();
@@ -697,7 +699,7 @@ public class Gui extends JFrame {
         bc.weightx = 0.05;
         panelLeftTop.add(displayItemControls, bc);
         
-        addControlButtons();
+        addControlButtons();    
         
         // Bottom Panel
         tabOne.setLayout(gridBagLayout);
