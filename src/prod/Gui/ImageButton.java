@@ -156,9 +156,9 @@ public class ImageButton extends JButton implements MouseListener {
                 component.setEnabled(true);
                 break;
             case SAVE:
-                if (component instanceof JTextPane) {
-                    JTextPane textPane = (JTextPane) component;
-                    String body = textPane.getText();
+                if (component instanceof EditorPanel) {
+                    EditorPanel textPane = (EditorPanel) component;
+                    String body = textPane.readDocumentContent();
                     reminder.setBody(body);
                     int result = dbHandler.updateReminder(reminder);
                     

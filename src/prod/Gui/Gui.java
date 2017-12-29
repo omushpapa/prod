@@ -54,6 +54,7 @@ import java.util.Date;
 import java.util.List;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.AbstractAction;
 import javax.swing.BorderFactory;
 import javax.swing.BoxLayout;
 import javax.swing.JButton;
@@ -68,7 +69,6 @@ import javax.swing.JScrollPane;
 import javax.swing.JTabbedPane;
 import javax.swing.JTextArea;
 import javax.swing.JTextField;
-import javax.swing.JTextPane;
 import javax.swing.SwingConstants;
 import javax.swing.SwingUtilities;
 import javax.swing.UIManager;
@@ -76,6 +76,11 @@ import javax.swing.UnsupportedLookAndFeelException;
 import javax.swing.border.BevelBorder;
 import javax.swing.border.Border;
 import javax.swing.border.EtchedBorder;
+import javax.swing.text.StyledDocument;
+import javax.swing.text.html.HTMLEditorKit;
+import javax.swing.undo.CannotRedoException;
+import javax.swing.undo.CannotUndoException;
+import javax.swing.undo.UndoManager;
 import prod.Config.ConfigKeys;
 import prod.Config.ConfigHandler;
 import prod.Database.DatabaseHandler;
@@ -107,7 +112,7 @@ public class Gui extends JFrame {
     private final JPanel tabTwo = new JPanel();
     private JTabbedPane tabbedPane;
     private GridLayout gridLayout = new GridLayout();
-    private JTextPane displayItem = new JTextPane();
+    private EditorPanel displayItem = new EditorPanel();
     private final Border lowerEtchedBorder = 
             BorderFactory.createEtchedBorder(EtchedBorder.LOWERED);
     private JScrollPane topScrollPane = new JScrollPane();
@@ -116,6 +121,10 @@ public class Gui extends JFrame {
     private JButton selectDateButton = null;
     private JTextArea selectListItem = null;
     private JPanel displayItemControls;
+    
+    private UndoManager undoManager;
+    private StyledDocument styledDoc;
+    private HTMLEditorKit htmlKit;
     
     // Date variables
     protected Calendar currentDisplayDate;
@@ -646,15 +655,32 @@ public class Gui extends JFrame {
         
         // Display Area
         displayItem.setBorder(lowerEtchedBorder);
-        displayItem.setText("Hello, selected reminder will be shown here!");
+        displayItem.setDocumentText("Hello, selected reminder will be shown here!");
         displayItem.setDisabledTextColor(Color.BLACK);
         displayItem.setPreferredSize(panelLeftTop.getSize());
-        displayItem.setEnabled(false);
+        displayItem.setEnabled(false);        
+        htmlKit = (HTMLEditorKit) displayItem.getEditorKit();
+        styledDoc = displayItem.getStyledDocument();
+        undoManager = displayItem.getUndoManager();
+        displayItem.setUndoAction(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    undoManager.undo();
+                } catch (CannotUndoException cre) {}
+            }
+        });
+        displayItem.setRedoAction(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    undoManager.redo();
+                } catch (CannotRedoException cre) {}
+            }
+        });
+        
         // topScrollPane
-        topScrollPane.getVerticalScrollBar().setUnitIncrement(3);
-        topScrollPane.setViewportView(displayItem);
-        topScrollPane.setHorizontalScrollBarPolicy(
-                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
+        topScrollPane = displayItem.getScrollPane();
         
         // Panel Left Top
         GridBagConstraints bc = new GridBagConstraints();
@@ -809,7 +835,6 @@ public class Gui extends JFrame {
             c.gridy = i;
             
             Reminder reminder = reminders.get(i);
-            String textValue = "" + reminder.getTitle() + ": " + reminder.getBody();
             JTextArea textArea = new JTextArea(reminder.getTitle());
             textArea.setBorder(lowerEtchedBorder);
             textArea.setLineWrap(true);
@@ -820,7 +845,9 @@ public class Gui extends JFrame {
             textArea.addMouseListener(new MouseListener() {
                 @Override
                 public void mouseClicked(MouseEvent e) {
-                    displayItem.setText(reminder.getBody());
+                    displayItem.setDocumentText(
+                            dbHandler.getReminderWithRowID(
+                                    reminder.getRowID()).getBody());
                     displayItem.setName(String.valueOf(reminder.getRowID()));
                     displayItem.setEnabled(false);
                     SwingUtilities.invokeLater(() -> {

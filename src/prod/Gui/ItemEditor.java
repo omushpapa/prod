@@ -31,10 +31,8 @@
  */
 package prod.Gui;
 
-import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;
-import java.awt.Event;
 import java.awt.Font;
 import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
@@ -43,35 +41,22 @@ import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.io.IOException;
-import java.io.StringReader;
-import java.io.StringWriter;
-import java.util.logging.Level;
-import java.util.logging.Logger;
 import javax.swing.AbstractAction;
 import javax.swing.JComboBox;
-import javax.swing.JComponent;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
-import javax.swing.JTextPane;
-import javax.swing.KeyStroke;
 import javax.swing.SwingUtilities;
 import javax.swing.event.UndoableEditEvent;
-import javax.swing.text.BadLocationException;
 import javax.swing.text.DefaultEditorKit;
-import javax.swing.text.DefaultStyledDocument;
-import javax.swing.text.SimpleAttributeSet;
-import javax.swing.text.StyleConstants;
 import javax.swing.text.StyledDocument;
 import javax.swing.text.StyledEditorKit;
 import javax.swing.text.html.HTMLEditorKit;
 import javax.swing.undo.CannotRedoException;
 import javax.swing.undo.CannotUndoException;
 import javax.swing.undo.UndoManager;
-import org.jsoup.Jsoup;
 import prod.Database.DatabaseHandler;
 import prod.Models.Reminder;
 
@@ -84,8 +69,8 @@ public class ItemEditor extends JDialog {
     private static final int windowWidth = 700;
     private static final int windowHeight = 550;
     private final Reminder reminder;
-    private JPanel controlsPanel;
-    private JTextPane textPanel;
+    private JPanel controlsPanel, bottomPanel;
+    private EditorPanel textPanel;
     private FormatButton cut, copy, paste, bold, italic, 
             underline, undo, redo, save;
     private final Container contentPane;
@@ -93,9 +78,9 @@ public class ItemEditor extends JDialog {
     private JComboBox comboBox = new JComboBox();
     
     private final GridBagLayout gridBagLayout = new GridBagLayout();
-    private final UndoManager undoManager = new UndoManager();
+    private UndoManager undoManager;
     private StyledDocument styledDoc;
-    private final HTMLEditorKit htmlKit = new HTMLEditorKit();
+    private HTMLEditorKit htmlKit;
     private String selectFont = "Arial";
     private JTextField title = new JTextField();
     private JTextField date = new JTextField();
@@ -107,8 +92,7 @@ public class ItemEditor extends JDialog {
         setTitle("title"); 
         setSize(windowWidth, windowHeight);
         setVisible(true);
-        //setModalityType(Dialog.DEFAULT_MODALITY_TYPE);
-        setModal(true);
+        setModalityType(ModalityType.DOCUMENT_MODAL);
         setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(new JPanel());
         
@@ -119,23 +103,39 @@ public class ItemEditor extends JDialog {
     private void createMainPanel() {
         contentPane.setLayout(gridBagLayout);
         controlsPanel = new JPanel(gridBagLayout);
-        textPanel = new JTextPane();
-        String bodyText = "<br /><br />" + 
-                reminder.getBody().replace("<br /><br />", "");
-        textPanel.setDocument(new DefaultStyledDocument());
-        textPanel.setEditorKit(htmlKit);
+        textPanel = new EditorPanel();
+        htmlKit = (HTMLEditorKit) textPanel.getEditorKit();
         styledDoc = textPanel.getStyledDocument();
+        undoManager = textPanel.getUndoManager();
+        textPanel.setUndoAction(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    undoManager.undo();
+                    updateButtons();
+                } catch (CannotUndoException cre) {}
+            }
+        });
+        textPanel.setRedoAction(new AbstractAction() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                try {
+                    undoManager.redo();
+                    updateButtons();
+                } catch (CannotRedoException cre) {}
+            }
+        });
+        // Load text to TextPane
+        textPanel.setDocumentText(reminder.getBody());
         
-        // Add components
+        // Add title and Date
         Font f = new Font(selectFont, Font.BOLD, 15);
         JPanel titlePanel = new JPanel(gridBagLayout);
         titlePanel.setBackground(Color.GRAY);
-        textPanel.setLayout(new BorderLayout());
         title.setText(reminder.getTitle());
         title.setFont(f);
         date.setText(reminder.getDate());
         date.setFont(f);
-        textPanel.add(titlePanel, BorderLayout.NORTH);
         
         GridBagConstraints bcc = new GridBagConstraints();
         bcc.fill = GridBagConstraints.BOTH;
@@ -148,17 +148,6 @@ public class ItemEditor extends JDialog {
         bcc.gridx = 1;
         titlePanel.add(date, bcc);
         
-        // Load text to TextPane
-        StringReader reader = new StringReader(bodyText);
-        try {
-            htmlKit.read(reader, styledDoc, 0);
-        } catch (IOException | BadLocationException ex) {
-            Logger.getLogger(ItemEditor.class.getName())
-                    .log(Level.SEVERE, null, ex);
-        }
-        
-        setAttributes();
-        
         GridBagConstraints c = new GridBagConstraints();
         c.fill = GridBagConstraints.BOTH;
         c.gridx = 0;
@@ -170,17 +159,27 @@ public class ItemEditor extends JDialog {
         c.weighty = 0.9;
         c.gridy = 1;
         
+        bottomPanel = new JPanel(gridBagLayout);
+        contentPane.add(bottomPanel, c);
         
-        textScrollPane = new JScrollPane();
-        textScrollPane.getVerticalScrollBar().setUnitIncrement(3);
-        textScrollPane.setViewportView(textPanel);
-        textScrollPane.setHorizontalScrollBarPolicy(
-                JScrollPane.HORIZONTAL_SCROLLBAR_NEVER);
-        contentPane.add(textScrollPane, c);
+        bcc = new GridBagConstraints();
+        bcc.fill = GridBagConstraints.BOTH;
+        bcc.weightx = 1.0;
+        bcc.weighty = 0.03;
+        bcc.gridx = 0;
+        bcc.gridy = 0;
+        bottomPanel.add(titlePanel, bcc);
+        
+        bcc.weighty = 0.97;
+        bcc.gridy = 1;
+        textScrollPane = textPanel.getScrollPane();
+        bottomPanel.add(textScrollPane, bcc);
         
         addControls();
         addHandlers();
         updateButtons();
+        
+        textPanel.addMappings();
     }
 
     private void addControls() {
@@ -243,16 +242,13 @@ public class ItemEditor extends JDialog {
         }
         comboBox.addActionListener((ActionEvent e) -> {
             selectFont = ((JComboBox) e.getSource()).getSelectedItem().toString();
-            setAttributes(selectFont);
+            textPanel.setFontTo(selectFont);
         });
         controlsPanel.add(comboBox, c);
-    }
-    
-    public static String html2Text(String html) {
-        return Jsoup.parse(html).text();
-    }
+    }    
     
     public static void main(String[] args) {
+        // For testing this window solo :- Do not hang me :)
         SwingUtilities.invokeLater(() -> {
             new ItemEditor(new Reminder("Sample reminder"), dbHandler);
         });
@@ -260,7 +256,6 @@ public class ItemEditor extends JDialog {
 
     private void addHandlers() {
         styledDoc.addUndoableEditListener((UndoableEditEvent e) -> {
-            undoManager.addEdit(e.getEdit());
             updateButtons();
         });
         
@@ -276,53 +271,6 @@ public class ItemEditor extends JDialog {
                 updateButtons();
             } catch (CannotRedoException cre) {}
         });
-        
-        KeyStroke undoKeyStroke = KeyStroke.getKeyStroke(
-                KeyEvent.VK_Z, Event.CTRL_MASK);
-        KeyStroke redoKeyStroke = KeyStroke.getKeyStroke(
-                KeyEvent.VK_Y, Event.CTRL_MASK);
-        KeyStroke boldKeyStroke = KeyStroke.getKeyStroke(
-                KeyEvent.VK_B, Event.CTRL_MASK);
-        KeyStroke italicKeyStroke = KeyStroke.getKeyStroke(
-                KeyEvent.VK_I, Event.CTRL_MASK);
-        KeyStroke underlineKeyStroke = KeyStroke.getKeyStroke(
-                KeyEvent.VK_U, Event.CTRL_MASK);
-        
-        textPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
-                .put(boldKeyStroke, "boldKeyStroke");
-        textPanel.getActionMap().put(
-                "boldKeyStroke", new StyledEditorKit.BoldAction());
-        textPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
-                .put(italicKeyStroke, "italicKeyStroke");
-        textPanel.getActionMap().put(
-                "italicKeyStroke", new StyledEditorKit.ItalicAction());
-        textPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
-                .put(underlineKeyStroke, "underlineKeyStroke");
-        textPanel.getActionMap().put(
-                "underlineKeyStroke", new StyledEditorKit.UnderlineAction());
-        
-        textPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
-                .put(undoKeyStroke, "undoKeyStroke");
-        textPanel.getActionMap().put("undoKeyStroke", new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    undoManager.undo();
-                    updateButtons();
-                 } catch (CannotUndoException cue) {}
-            }
-        });
-        textPanel.getInputMap(JComponent.WHEN_IN_FOCUSED_WINDOW)
-                .put(redoKeyStroke, "redoKeyStroke");
-        textPanel.getActionMap().put("redoKeyStroke", new AbstractAction() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                try {
-                    undoManager.redo();
-                    updateButtons();
-                 } catch (CannotRedoException cre) {}
-            }
-        });
     }
     
     private void updateButtons() {
@@ -330,33 +278,8 @@ public class ItemEditor extends JDialog {
         undo.setEnabled(undoManager.canUndo());
     }
     
-    private void setAttributes() {
-        SimpleAttributeSet attributeSet = new SimpleAttributeSet();
-        StyleConstants.setForeground(attributeSet, Color.BLACK);
-        StyleConstants.setFontFamily(attributeSet, "Arial");
-        StyleConstants.setFontSize(attributeSet, 14);
-
-        styledDoc.setCharacterAttributes(0, styledDoc.getLength(), attributeSet, false);
-    }
-    
-    private void setAttributes(String font) {
-        SimpleAttributeSet attributeSet = new SimpleAttributeSet();
-        StyleConstants.setFontFamily(attributeSet, font);
-
-        styledDoc.setCharacterAttributes(0, styledDoc.getLength(), attributeSet, false);
-    }
-    
     private boolean saveReminderChanges() {
-        StringWriter writer = new StringWriter();
-        try {
-            htmlKit.write(writer, styledDoc, 0, styledDoc.getLength());
-        } catch (IOException | BadLocationException ex) {
-            Logger.getLogger(ItemEditor.class.getName())
-                    .log(Level.SEVERE, null, ex);
-        }
-        String htmlContent = writer.toString();
-        System.out.println("Value is: " + htmlContent);
-        System.out.println("\n\nActual text: " + html2Text(htmlContent));
+        String htmlContent = textPanel.readDocumentContent();
         
         String t = title.getText();
         String d = date.getText();

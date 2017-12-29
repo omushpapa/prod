@@ -31,24 +31,17 @@
  */
 package prod.Gui;
 
-import java.awt.Color;
 import java.awt.Component;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Insets;
-import java.awt.event.MouseEvent;
-import java.awt.event.MouseListener;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.swing.Action;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
-import javax.swing.JOptionPane;
-import javax.swing.JTextPane;
 import javax.swing.border.Border;
-import prod.Database.DatabaseHandler;
 import static prod.Gui.Gui.RESOURCES_PATH;
-import prod.Models.Reminder;
 
 /**
  *
