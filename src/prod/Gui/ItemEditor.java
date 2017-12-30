@@ -38,13 +38,15 @@ import java.awt.GraphicsEnvironment;
 import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.event.ActionEvent;
+import java.awt.event.FocusEvent;
+import java.awt.event.FocusListener;
 import java.awt.event.KeyEvent;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import javax.swing.AbstractAction;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
-import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
@@ -59,6 +61,7 @@ import javax.swing.undo.CannotUndoException;
 import javax.swing.undo.UndoManager;
 import prod.Database.DatabaseHandler;
 import prod.Models.Reminder;
+import prod.Prod;
 
 /**
  *
@@ -89,15 +92,13 @@ public class ItemEditor extends JDialog {
         this.contentPane = getContentPane();
         this.reminder = reminder;
         this.dbHandler = handler;
-        setTitle("title"); 
+        setTitle(Prod.TITLE + " Edit"); 
         setSize(windowWidth, windowHeight);
         setVisible(true);
         setModalityType(ModalityType.DOCUMENT_MODAL);
-        setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
         setLocationRelativeTo(new JPanel());
         
         createMainPanel();
-        
     }
 
     private void createMainPanel() {
@@ -134,8 +135,32 @@ public class ItemEditor extends JDialog {
         titlePanel.setBackground(Color.GRAY);
         title.setText(reminder.getTitle());
         title.setFont(f);
-        date.setText(reminder.getDate());
-        date.setFont(f);
+        date.setText(
+                (reminder.getDate() == null || reminder.getDate().isEmpty()) ? 
+                        Reminder.dateFormat.toLowerCase(): reminder.getDate());
+        date.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (date.getText().equals(Reminder.dateFormat.toLowerCase())) {
+                    date.setText("");
+                    date.setForeground(Color.BLACK);
+                }
+            }
+            @Override
+            public void focusLost(FocusEvent e) {
+                if (date.getText().isEmpty()) {
+                    date.setForeground(Color.GRAY);
+                    date.setText(Reminder.dateFormat.toLowerCase());
+                }
+            }
+        });
+        date.setFont(new Font(selectFont, Font.PLAIN, 12));
+        if (reminder.getDate() == null || 
+                date.getText().equals(Reminder.dateFormat.toLowerCase())) {
+            date.setForeground(Color.GRAY);
+        } else {
+            date.setForeground(Color.BLACK);
+        }
         
         GridBagConstraints bcc = new GridBagConstraints();
         bcc.fill = GridBagConstraints.BOTH;
@@ -186,25 +211,34 @@ public class ItemEditor extends JDialog {
         cut = new FormatButton(
                 "content-cut_black.png", new DefaultEditorKit.CutAction());
         cut.setMnemonic(KeyEvent.VK_X);
+        cut.setToolTipText("Cut");
         copy = new FormatButton(
                 "content-copy_black.png", new DefaultEditorKit.CopyAction());
         copy.setMnemonic(KeyEvent.VK_C);
+        copy.setToolTipText("Copy");
         paste = new FormatButton(
                 "content-paste_black.png", new DefaultEditorKit.PasteAction());
+        paste.setToolTipText("Paste");
         undo =  new FormatButton("undo_black.png");
+        undo.setToolTipText("Undo");
         redo = new FormatButton("redo_black.png");
+        redo.setToolTipText("Redo");
         underline = new FormatButton(
                 "format-underline_black.png", new StyledEditorKit.UnderlineAction());
+        underline.setToolTipText("Underline");
         bold = new FormatButton(
                 "format-bold_black.png", new StyledEditorKit.BoldAction());
+        bold.setToolTipText("Bold");
         italic = new FormatButton(
                 "format-italic_black.png", new StyledEditorKit.ItalicAction());
+        italic.setToolTipText("Italic");
         save = new FormatButton("content-save_black.png");
-        
+        save.setToolTipText("Save");
         save.addMouseListener(new MouseListener() {
             @Override
             public void mouseClicked(MouseEvent e) {
                 saveReminderChanges();
+                dispose();
             }
 
             @Override
@@ -302,11 +336,22 @@ public class ItemEditor extends JDialog {
         
         String t = title.getText();
         String d = date.getText();
-        reminder.setTitle(t);
+        reminder.setTitle(t.trim());
         reminder.setBody(htmlContent);
-        reminder.setDate(d);
+        reminder.setDate(d.trim());
         
         int result = dbHandler.updateReminder(reminder);
+        String message;
+        String mTitle;
+        if (result > 0) {
+            message = "Changes saved successfully";
+            mTitle = "Success";
+        } else {
+            message = "Changes could not be saved";
+            mTitle = "Fail";
+        }
+        JOptionPane.showMessageDialog(null, 
+                    message, mTitle, JOptionPane.INFORMATION_MESSAGE);
         return (result > 0);
     }
 }

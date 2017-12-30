@@ -55,13 +55,16 @@ public class ConfigHandler {
     private InputStream inputStream = null;
     private OutputStream outputStream = null;
     
-    public ConfigHandler() {}
+    public ConfigHandler() {
+        create();
+    }
     
     public ConfigHandler(String fileName) {
         this.propertiesFile = fileName;
+        create();
     }
     
-    public void create() {
+    private void create() {
         File f = new File(propertiesFile);
         try {
             f.createNewFile();

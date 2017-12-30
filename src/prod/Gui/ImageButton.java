@@ -34,23 +34,25 @@ package prod.Gui;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Dialog;
 import java.awt.Graphics;
 import java.awt.Image;
 import java.awt.Insets;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
+import java.awt.event.WindowEvent;
+import java.awt.event.WindowListener;
 import java.io.IOException;
 import javax.imageio.ImageIO;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
 import javax.swing.JOptionPane;
-import javax.swing.JTextPane;
+import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
 import prod.Database.DatabaseHandler;
 import static prod.Gui.Gui.RESOURCES_PATH;
 import prod.Models.Reminder;
+import prod.Prod;
 
 /**
  *
@@ -62,13 +64,15 @@ public class ImageButton extends JButton implements MouseListener {
     public static final String SAVE = "save";
     public static final String QUICK_EDIT = "quickEdit";
     public static final String EDIT = "edit";
+    public static final String NEW = "new";
     private static String iconFile;
     private static DatabaseHandler dbHandler;
     public Component component;
     private int scaledWidth = 15;
     private int scaledHeight = 15;
     
-    public ImageButton(String iconFile, String buttonName, DatabaseHandler dbHandler) {
+    public ImageButton(String iconFile, 
+            String buttonName, DatabaseHandler dbHandler) {
         this.iconFile = iconFile;
         this.dbHandler = dbHandler;
         setName(buttonName);
@@ -123,6 +127,11 @@ public class ImageButton extends JButton implements MouseListener {
             int rowId = Integer.valueOf(rowString.trim());
             Reminder reminder = dbHandler.getReminderWithRowID(rowId);
             applyAction(reminder);
+        } else if (getName().equals(NEW)) {
+            Reminder newReminder = new Reminder(
+                    "Title goes here", "More information here", 
+                    "Date here (" + Reminder.dateFormat.toLowerCase() + ")");
+            applyAction(newReminder);
         } else {
             JOptionPane.showMessageDialog(
                     component.getParent(), "Select a reminder first");
@@ -151,6 +160,7 @@ public class ImageButton extends JButton implements MouseListener {
     }
 
     private void applyAction(Reminder reminder) {
+        
         switch(getName()) {
             case QUICK_EDIT:
                 component.setEnabled(true);
@@ -173,12 +183,48 @@ public class ImageButton extends JButton implements MouseListener {
                 }
                 break;
             case EDIT:
-                new ItemEditor(reminder, dbHandler);
+                ItemEditor editItem = new ItemEditor(reminder, dbHandler);
+                editItem.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                editItem.addWindowListener(getWindowListener());
+                break;
+            case NEW:
+                ItemEditor newItem = new ItemEditor(reminder, dbHandler);
+                newItem.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
+                newItem.addWindowListener(getWindowListener());                
                 break;
             default:
                 //
                      
         }
+    }
+    
+    private WindowListener getWindowListener() {
+        JFrame frame = (JFrame) SwingUtilities.getRoot(component);
+        return new WindowListener() {
+            @Override
+            public void windowOpened(WindowEvent e) {}
+
+            @Override
+            public void windowClosing(WindowEvent e) {}
+
+            @Override
+            public void windowClosed(WindowEvent e) {
+                frame.dispose();
+                new Gui(Prod.TITLE, dbHandler, Prod.config);
+            }
+
+            @Override
+            public void windowIconified(WindowEvent e) {}
+
+            @Override
+            public void windowDeiconified(WindowEvent e) {}
+
+            @Override
+            public void windowActivated(WindowEvent e) {}
+
+            @Override
+            public void windowDeactivated(WindowEvent e) {}
+        };
     }
     
     private static class RoundedBorder implements Border {

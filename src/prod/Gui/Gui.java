@@ -42,7 +42,6 @@ import java.awt.GridBagConstraints;
 import java.awt.GridBagLayout;
 import java.awt.GridLayout;
 import java.awt.Insets;
-import java.awt.Rectangle;
 import java.awt.Window;
 import java.awt.event.ActionEvent;
 import java.awt.event.KeyEvent;
@@ -337,8 +336,8 @@ public class Gui extends JFrame {
                     
                     dayButton.setText(dayString);
                     dayButton.setBorderPainted(true);
-                    String formattedDate = calendar.get(
-                            Calendar.DAY_OF_MONTH) + "/" +
+                    String formattedDate = String.format(
+                            "%02d", calendar.get(Calendar.DAY_OF_MONTH)) + "/" +
                             (calendar.get(Calendar.MONTH) + 1) + "/" +
                             calendar.get(Calendar.YEAR);
                     dayLabel = new JLabel(
@@ -729,6 +728,13 @@ public class Gui extends JFrame {
         bc.weightx = 1;
         bc.weighty = 0.25;
         
+        ImageButton newItem = new ImageButton(
+                "plus-circle-outline_black.png", ImageButton.NEW, dbHandler);
+        newItem.setPreferredSize(dimension);
+        newItem.setToolTipText("New");
+        newItem.setComponent(displayItem);
+        newItem.create();
+        
         ImageButton editItem = new ImageButton(
                 "pencil_black.png", ImageButton.EDIT, dbHandler);
         editItem.setPreferredSize(dimension);
@@ -751,10 +757,12 @@ public class Gui extends JFrame {
         saveItem.setComponent(displayItem);
         saveItem.create();
         
-        displayItemControls.add(editItem, bc);
+        displayItemControls.add(newItem , bc);
         bc.gridy = 1;
-        displayItemControls.add(quickEditItem, bc);
+        displayItemControls.add(editItem , bc);
         bc.gridy = 2;
+        displayItemControls.add(quickEditItem , bc);
+        bc.gridy = 3;
         displayItemControls.add(saveItem, bc);
     }
 
@@ -831,6 +839,20 @@ public class Gui extends JFrame {
             reminders = dbHandler.getRemindersOfDate(date);
         } else {
             reminders = dbHandler.getRemindersWithID();
+        }
+        if (reminders.isEmpty()) {
+            JTextArea textArea = new JTextArea("No record found");
+            textArea.setBorder(lowerEtchedBorder);
+            textArea.setLineWrap(true);
+            textArea.setColumns(2);
+            textArea.setBackground(contentPane.getBackground());
+            textArea.setWrapStyleWord(true);
+            textArea.setEditable(false);
+            if (useSelectDate) {
+                tabTwo.add(textArea, c);
+            } else {
+                tabOne.add(textArea, c);
+            }
         }
         
         for (int i = 0; i < reminders.size(); i++) {

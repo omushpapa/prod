@@ -33,7 +33,6 @@ package prod;
 
 import prod.Config.ConfigKeys;
 import prod.Config.ConfigHandler;
-import java.awt.Window;
 import prod.Models.Reminder;
 import prod.Database.DatabaseHandler;
 import java.text.DateFormat;
@@ -41,12 +40,8 @@ import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.Date;
 import java.util.List;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.JFrame;
+import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
-import javax.swing.UIManager;
-import javax.swing.UnsupportedLookAndFeelException;
 import prod.Gui.Gui;
 
 /**
@@ -57,13 +52,13 @@ public class Prod {
     
     static Input input = new Input();
     static DatabaseHandler dbHandler;
-    static final ConfigHandler config = new ConfigHandler();
+    public static final ConfigHandler config = new ConfigHandler();
+    public static final String TITLE = "Prod - Reminder";
 
     /**
      * @param args the command line arguments
      */
     public static void main(String[] args) {
-        config.create();
         dbHandler = new DatabaseHandler(
                 config.getProperty(ConfigKeys.DB_NAME, "prod.db"));
         boolean success = dbHandler.createTable();
@@ -72,8 +67,11 @@ public class Prod {
             // Run the GUI construction in the Event-Dispatching thread for thread-safety
             SwingUtilities.invokeLater(() -> {
                 // The constructor will do the job
-                new Gui("Prod - Reminder", dbHandler, config); 
+                new Gui(TITLE, dbHandler, config); 
             });        
+        } else {
+            JOptionPane.showMessageDialog(null, "Could not access database", 
+                    TITLE, JOptionPane.ERROR_MESSAGE);
         }
     }
     
