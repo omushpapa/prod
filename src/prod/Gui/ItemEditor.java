@@ -87,6 +87,7 @@ public class ItemEditor extends JDialog {
     private String selectFont = "Arial";
     private JTextField title = new JTextField();
     private JTextField date = new JTextField();
+    public boolean isNew = false;
     
     public ItemEditor(Reminder reminder, DatabaseHandler handler) {
         this.contentPane = getContentPane();
@@ -222,8 +223,11 @@ public class ItemEditor extends JDialog {
         textPanel.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
-                if (textPanel.readDocumentText().equals("More information here")) {
+                if (isNew && textPanel.readDocumentText().equals("More information here")) {
                     textPanel.setDocumentText("");
+                    textPanel.getUndoManager().die();
+                    isNew = false;
+                    updateButtons();
                 }
             }
             @Override

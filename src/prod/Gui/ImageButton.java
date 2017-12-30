@@ -189,6 +189,7 @@ public class ImageButton extends JButton implements MouseListener {
                 break;
             case NEW:
                 ItemEditor newItem = new ItemEditor(reminder, dbHandler);
+                newItem.isNew = true;
                 newItem.setDefaultCloseOperation(JFrame.DISPOSE_ON_CLOSE);
                 newItem.addWindowListener(getWindowListener());                
                 break;
