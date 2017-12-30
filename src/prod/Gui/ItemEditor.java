@@ -135,13 +135,27 @@ public class ItemEditor extends JDialog {
         titlePanel.setBackground(Color.GRAY);
         title.setText(reminder.getTitle());
         title.setFont(f);
+        title.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (title.getText().equals("Title goes here")) {
+                    title.setText("");
+                    title.setForeground(Color.BLACK);
+                }
+            }
+            @Override
+            public void focusLost(FocusEvent e) {}
+        });
         date.setText(
                 (reminder.getDate() == null || reminder.getDate().isEmpty()) ? 
                         Reminder.dateFormat.toLowerCase(): reminder.getDate());
         date.addFocusListener(new FocusListener() {
             @Override
             public void focusGained(FocusEvent e) {
-                if (date.getText().equals(Reminder.dateFormat.toLowerCase())) {
+                if (date.getText().equals(Reminder.dateFormat.toLowerCase()) ||
+                        date.getText().equals(
+                                "Date here (" + 
+                                        Reminder.dateFormat.toLowerCase() + ")")) {
                     date.setText("");
                     date.setForeground(Color.BLACK);
                 }
@@ -205,6 +219,16 @@ public class ItemEditor extends JDialog {
         updateButtons();
         
         textPanel.addMappings();
+        textPanel.addFocusListener(new FocusListener() {
+            @Override
+            public void focusGained(FocusEvent e) {
+                if (textPanel.readDocumentText().equals("More information here")) {
+                    textPanel.setDocumentText("");
+                }
+            }
+            @Override
+            public void focusLost(FocusEvent e) {}
+        });
     }
 
     private void addControls() {
