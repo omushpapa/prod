@@ -32,6 +32,7 @@
 package prod.Gui;
 
 import java.awt.Color;
+import java.awt.Cursor;
 import java.awt.Event;
 import java.awt.event.KeyEvent;
 import java.io.IOException;
@@ -70,6 +71,7 @@ public class EditorPanel extends JTextPane {
     
     public EditorPanel() {        
         setDocument(new DefaultStyledDocument());
+        htmlKit.setDefaultCursor(new Cursor(Cursor.TEXT_CURSOR));
         setEditorKit(htmlKit);
         styledDoc = getStyledDocument();
         setAttributes();      

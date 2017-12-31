@@ -77,7 +77,7 @@ public class Reminder {
         }
     }
     
-    public int getRowID() {
+    public Integer getRowID() {
         return this.rowid;
     }
     

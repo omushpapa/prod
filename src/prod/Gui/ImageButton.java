@@ -123,15 +123,15 @@ public class ImageButton extends JButton implements MouseListener {
     @Override
     public void mouseClicked(MouseEvent e) {
         String rowString = component.getName();
-        if (rowString != null) {
-            int rowId = Integer.valueOf(rowString.trim());
-            Reminder reminder = dbHandler.getReminderWithRowID(rowId);
-            applyAction(reminder);
-        } else if (getName().equals(NEW)) {
+        if (getName().equals(NEW)) {
             Reminder newReminder = new Reminder(
                     "Title goes here", "More information here", 
                     "Date here (" + Reminder.dateFormat.toLowerCase() + ")");
             applyAction(newReminder);
+        } else if (rowString != null) {
+            int rowId = Integer.valueOf(rowString.trim());
+            Reminder reminder = dbHandler.getReminderWithRowID(rowId);
+            applyAction(reminder);
         } else {
             JOptionPane.showMessageDialog(
                     component.getParent(), "Select a reminder first");

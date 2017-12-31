@@ -368,9 +368,13 @@ public class ItemEditor extends JDialog {
         reminder.setBody(htmlContent);
         reminder.setDate(d.trim());
         
-        int result = dbHandler.updateReminder(reminder);
-        String message;
-        String mTitle;
+        int result;
+        if (reminder.getRowID() != null) {
+            result = dbHandler.updateReminder(reminder);
+        } else {
+            result = dbHandler.insertReminder(reminder);
+        }
+        String message, mTitle;
         if (result > 0) {
             message = "Changes saved successfully";
             mTitle = "Success";
