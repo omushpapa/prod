@@ -531,8 +531,8 @@ public class Gui extends JFrame {
     
     private boolean allowLookAndFeelChange(String theme) {
         boolean close = false;
-        String message = "Do you want to change to '" + theme + "' look?\n\n"
-                + "Note: Changes may NOT be full applied until restart!\n"
+        String message = "Do you really want to switch to '" + theme + "' look?\n\n"
+                + "Note: Changes may NOT be fully applied until restart!\n"
                 + "\tNot all Looks may be available for your system.";
         int reply = JOptionPane.showConfirmDialog(
                 this, message, "Change Look", JOptionPane.YES_NO_OPTION);
