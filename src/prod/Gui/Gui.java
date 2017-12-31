@@ -95,7 +95,7 @@ import prod.Prod;
 
 public class Gui extends JFrame {
     
-    public static final String RESOURCES_PATH = "../resources/";
+    public static final String RESOURCES_PATH = "res/";
     private final DatabaseHandler dbHandler;
     private final ConfigHandler config;
     private final int windowWidth = 700;

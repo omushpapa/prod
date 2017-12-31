@@ -110,7 +110,8 @@ public class ImageButton extends JButton implements MouseListener {
         
         try {
             Image img = ImageIO.read(
-                    getClass().getResource(RESOURCES_PATH + iconFile));
+                    getClass().getClassLoader().getResourceAsStream(
+                            RESOURCES_PATH +iconFile));
             Image newimg = img.getScaledInstance(
                     getScaledWidth(), getScaledHeight(), Image.SCALE_FAST) ; 
             icon = new ImageIcon(newimg);
