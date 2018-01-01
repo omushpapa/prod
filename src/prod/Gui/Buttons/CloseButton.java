@@ -1,7 +1,7 @@
 /*
  * BSD 3-Clause License
  * 
- * Copyright (c) 2017, Aswa Paul
+ * Copyright (c) 2018, Aswa Paul
  * All rights reserved.
  * 
  * Redistribution and use in source and binary forms, with or without
@@ -29,7 +29,7 @@
  * OR TORT (INCLUDING NEGLIGENCE OR OTHERWISE) ARISING IN ANY WAY OUT OF THE USE
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
-package prod.Gui;
+package prod.Gui.Buttons;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -40,9 +40,9 @@ import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
 import java.io.IOException;
 import javax.imageio.ImageIO;
-import javax.swing.Action;
 import javax.swing.ImageIcon;
 import javax.swing.JButton;
+import javax.swing.JFrame;
 import javax.swing.border.Border;
 import static prod.Gui.Gui.RESOURCES_PATH;
 
@@ -50,22 +50,18 @@ import static prod.Gui.Gui.RESOURCES_PATH;
  *
  * @author giantas
  */
-public class FormatButton extends JButton implements MouseListener {
+
+
+public class CloseButton extends JButton implements MouseListener {
+    private static String iconFile;
+    private int scaledWidth = 10;
+    private int scaledHeight = 10;
+    private Component component;
     
-    private String iconFile;
-    private int scaledWidth = 20;
-    private int scaledHeight = 20;
-    
-    public FormatButton(String iconFile) {
+    public CloseButton(String iconFile, String buttonName, Component c) {
         this.iconFile = iconFile;
-        setDefaults();
-    }
-    
-    public FormatButton(String iconFile, Action a) {
-        this.iconFile = iconFile;
-        setAction(a);
-        addMouseListener(this);
-        setDefaults();
+        this.setToolTipText(buttonName);
+        this.component = c;
     }
     
     public void setScaledWidth(int width) {
@@ -84,12 +80,11 @@ public class FormatButton extends JButton implements MouseListener {
         return this.scaledHeight;
     }
     
-    public void setDefaults() {
+    public void create() {
         setIcon(getScaledIcon());
         setBorder(new RoundedBorder(5));
         setContentAreaFilled(false);
-        setText("");
-        setEnabled(true);
+        addMouseListener(this);
     }
     
     private ImageIcon getScaledIcon() {
@@ -98,7 +93,7 @@ public class FormatButton extends JButton implements MouseListener {
         try {
             Image img = ImageIO.read(
                     getClass().getClassLoader().getResourceAsStream(
-                            RESOURCES_PATH + iconFile));
+                            RESOURCES_PATH +iconFile));
             Image newimg = img.getScaledInstance(
                     getScaledWidth(), getScaledHeight(), Image.SCALE_FAST) ; 
             icon = new ImageIcon(newimg);
@@ -107,15 +102,24 @@ public class FormatButton extends JButton implements MouseListener {
         }
         return icon;
     }
-
-    @Override
-    public void mouseClicked(MouseEvent e) {}
     
     @Override
-    public void mousePressed(MouseEvent e) {}
+    public void mouseClicked(MouseEvent e) {
+        System.out.println("Clicked");
+        JFrame f = (JFrame) component;
+        f.dispose();
+        component.setVisible(false);
+    }
 
     @Override
-    public void mouseReleased(MouseEvent e) {}
+    public void mousePressed(MouseEvent e) {
+        // Do nothing
+    }
+
+    @Override
+    public void mouseReleased(MouseEvent e) {
+        // Do nothing
+    }
 
     @Override
     public void mouseEntered(MouseEvent e) {
@@ -153,3 +157,4 @@ public class FormatButton extends JButton implements MouseListener {
     }
     
 }
+

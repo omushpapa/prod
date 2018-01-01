@@ -31,6 +31,7 @@
  */
 package prod.Gui;
 
+import prod.Gui.Buttons.FormatButton;
 import java.awt.Color;
 import java.awt.Container;
 import java.awt.Font;
@@ -88,6 +89,7 @@ public class ItemEditor extends JDialog {
     private JTextField title = new JTextField();
     private JTextField date = new JTextField();
     public boolean isNew = false;
+    private Notifier notifier = new Notifier();
     
     public ItemEditor(Reminder reminder, DatabaseHandler handler) {
         this.contentPane = getContentPane();
@@ -382,8 +384,7 @@ public class ItemEditor extends JDialog {
             message = "Changes could not be saved";
             mTitle = "Fail";
         }
-        JOptionPane.showMessageDialog(null, 
-                    message, mTitle, JOptionPane.INFORMATION_MESSAGE);
+        notifier.send(mTitle, message, Notifier.INFORMATION, Notifier.BOTTOM_RIGHT);
         return (result > 0);
     }
 }

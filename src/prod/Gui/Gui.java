@@ -32,6 +32,7 @@
 
 package prod.Gui;
 
+import prod.Gui.Buttons.ImageButton;
 import java.awt.BorderLayout;
 import java.awt.Color;
 import java.awt.Container;

@@ -30,7 +30,7 @@
  * OF THIS SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
  */
 
-package prod.Gui;
+package prod.Gui.Buttons;
 
 import java.awt.Color;
 import java.awt.Component;
@@ -50,6 +50,9 @@ import javax.swing.JOptionPane;
 import javax.swing.SwingUtilities;
 import javax.swing.border.Border;
 import prod.Database.DatabaseHandler;
+import prod.Gui.EditorPanel;
+import prod.Gui.Gui;
+import prod.Gui.ItemEditor;
 import static prod.Gui.Gui.RESOURCES_PATH;
 import prod.Models.Reminder;
 import prod.Prod;
