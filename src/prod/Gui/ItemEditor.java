@@ -47,7 +47,6 @@ import java.awt.event.MouseListener;
 import javax.swing.AbstractAction;
 import javax.swing.JComboBox;
 import javax.swing.JDialog;
-import javax.swing.JOptionPane;
 import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
@@ -61,6 +60,8 @@ import javax.swing.undo.CannotRedoException;
 import javax.swing.undo.CannotUndoException;
 import javax.swing.undo.UndoManager;
 import prod.Database.DatabaseHandler;
+import prod.Gui.Notifier.NotifyPosition;
+import prod.Gui.Notifier.NotifyType;
 import prod.Models.Reminder;
 import prod.Prod;
 
@@ -384,7 +385,8 @@ public class ItemEditor extends JDialog {
             message = "Changes could not be saved";
             mTitle = "Fail";
         }
-        notifier.send(mTitle, message, Notifier.INFORMATION, Notifier.BOTTOM_RIGHT);
+        notifier.showAndDismiss(mTitle, message, 
+                NotifyType.INFORMATION, NotifyPosition.BOTTOM_RIGHT);
         return (result > 0);
     }
 }

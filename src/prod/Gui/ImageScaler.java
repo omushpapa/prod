@@ -41,14 +41,20 @@ import static prod.Gui.Gui.RESOURCES_PATH;
  *
  * @author giantas
  */
-public class ScaledIcon {
+public class ImageScaler {
     
     private String iconFile;
     private int scaledWidth = 15;
     private int scaledHeight = 15;
     
-    public ScaledIcon(String fileName) {
+    public ImageScaler(String fileName) {
         this.iconFile = fileName;
+    }
+    
+    public ImageScaler(String fileName, int width, int height) {
+        this.iconFile = fileName;
+        this.scaledWidth = width;
+        this.scaledHeight = height;
     }
     
     public void setScaledWidth(int width) {
@@ -67,7 +73,7 @@ public class ScaledIcon {
         return this.scaledHeight;
     }
     
-    public ImageIcon getScaledIcon() {
+    public ImageIcon getScaledImage() {
         ImageIcon icon;
         
         try {

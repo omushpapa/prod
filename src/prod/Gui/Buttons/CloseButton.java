@@ -33,18 +33,12 @@ package prod.Gui.Buttons;
 
 import java.awt.Color;
 import java.awt.Component;
-import java.awt.Graphics;
-import java.awt.Image;
-import java.awt.Insets;
 import java.awt.event.MouseEvent;
 import java.awt.event.MouseListener;
-import java.io.IOException;
-import javax.imageio.ImageIO;
-import javax.swing.ImageIcon;
 import javax.swing.JButton;
 import javax.swing.JFrame;
-import javax.swing.border.Border;
-import static prod.Gui.Gui.RESOURCES_PATH;
+import prod.Gui.ImageScaler;
+import prod.Gui.RoundedBorder;
 
 /**
  *
@@ -81,31 +75,16 @@ public class CloseButton extends JButton implements MouseListener {
     }
     
     public void create() {
-        setIcon(getScaledIcon());
+        ImageScaler scaler = new ImageScaler(iconFile, 
+                getScaledWidth(), getScaledHeight());
+        setIcon(scaler.getScaledImage());
         setBorder(new RoundedBorder(5));
         setContentAreaFilled(false);
         addMouseListener(this);
     }
     
-    private ImageIcon getScaledIcon() {
-        ImageIcon icon;
-        
-        try {
-            Image img = ImageIO.read(
-                    getClass().getClassLoader().getResourceAsStream(
-                            RESOURCES_PATH +iconFile));
-            Image newimg = img.getScaledInstance(
-                    getScaledWidth(), getScaledHeight(), Image.SCALE_FAST) ; 
-            icon = new ImageIcon(newimg);
-        } catch (IOException ex) {
-            icon = null;
-        }
-        return icon;
-    }
-    
     @Override
     public void mouseClicked(MouseEvent e) {
-        System.out.println("Clicked");
         JFrame f = (JFrame) component;
         f.dispose();
         component.setVisible(false);
@@ -130,31 +109,5 @@ public class CloseButton extends JButton implements MouseListener {
     @Override
     public void mouseExited(MouseEvent e) {
         setContentAreaFilled(false);
-    }
-    
-    private static class RoundedBorder implements Border {
-
-        private final int radius;
-
-        public RoundedBorder(int radius) {
-            this.radius = radius;
-        }
-
-        @Override
-        public Insets getBorderInsets(Component c) {
-            return new Insets(this.radius+1, this.radius+1, this.radius+2, this.radius);
-        }
-
-        @Override
-        public boolean isBorderOpaque() {
-            return true;
-        }
-
-        @Override
-        public void paintBorder(Component c, Graphics g, int x, int y, int width, int height) {
-            g.drawRoundRect(x, y, width-1, height-1, radius, radius);
-        }
-    }
-    
+    }    
 }
-

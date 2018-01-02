@@ -41,7 +41,10 @@ import java.awt.GridBagLayout;
 import java.awt.Rectangle;
 import java.awt.Toolkit;
 import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
+import java.util.Date;
+import java.util.concurrent.Executors;
+import java.util.concurrent.ScheduledExecutorService;
+import java.util.concurrent.TimeUnit;
 import javax.swing.BorderFactory;
 import javax.swing.ImageIcon;
 import javax.swing.JFrame;
@@ -58,17 +61,7 @@ import javax.swing.border.CompoundBorder;
  * @author giantas
  */
 public class Notifier extends JFrame {
-    
-    public static final int INFORMATION = 0;
-    public static final int SUCCESS = 1;
-    public static final int ERROR = 2;
-    public static final int WARNING = 3;
-    
-    public static final int TOP_RIGHT = 0;
-    public static final int TOP_LEFT = 1;
-    public static final int BOTTOM_RIGHT = 2;
-    public static final int BOTTOM_LEFT = 3;
-    
+        
     private final int windowWidth = 350;
     private final int windowHeight = 130;
     
@@ -81,9 +74,24 @@ public class Notifier extends JFrame {
     private int type = 0;
     private Dimension screenSize = Toolkit.getDefaultToolkit().getScreenSize();
     
+    private String title, message;    
     
     int duration = 3000;
-    int position = BOTTOM_RIGHT;
+    int position = NotifyPosition.BOTTOM_RIGHT;
+    
+    public static class NotifyType {
+        public static final int INFORMATION = 0;
+        public static final int SUCCESS = 1;
+        public static final int ERROR = 2;
+        public static final int WARNING = 3;
+    }
+    
+    public static class NotifyPosition {
+        public static final int TOP_RIGHT = 0;
+        public static final int TOP_LEFT = 1;
+        public static final int BOTTOM_RIGHT = 2;
+        public static final int BOTTOM_LEFT = 3;
+    }
     
     public Notifier () {}
     
@@ -104,42 +112,94 @@ public class Notifier extends JFrame {
         this.position = position;
     }
     
+    private void setNotificationTitle(String title) {
+        this.title = title;
+    }
+    
+    private void setNotificationMessage(String message) {
+        this.message = message;
+    }
+    
+    private String getNotificationTitle() {
+        return this.title;
+    }
+    
+    private String getNotificationMessage() {
+        return this.message;
+    }
+    
     private int getPosition() {
         return position;
     }
     
-    public void send(String title, String message) {
-        SwingUtilities.invokeLater(() -> {            
-            invoker(title, message);
+    public void showAndDismiss(String title, String message) {
+        setNotificationTitle(title);
+        setNotificationMessage(message);
+        SwingUtilities.invokeLater(() -> {
+            invokerTimer();
         });
     }
     
-    public void send(String title, String message, int notificationType) {
+    public void showAndDismiss(String title, String message, int notificationType) {
+        setNotificationTitle(title);
+        setNotificationMessage(message);
         setType(notificationType);
         SwingUtilities.invokeLater(() -> {
-            invoker(title, message);
+            invokerTimer();
         });
     }
     
-    public void send(String title, String message, int notificationType, int position) {
+    public void showAndDismiss(String title, String message, int notificationType, int position) {
+        setNotificationTitle(title);
+        setNotificationMessage(message);
         setType(notificationType);
         setPosition(position);
         SwingUtilities.invokeLater(() -> {
-            invoker(title, message);
+            invokerTimer();
         });
     }
     
-    private void invoker(String title, String message) {
-        Timer timer = new Timer(duration, new ActionListener() {
-            @Override
-            public void actionPerformed(ActionEvent e) {
-                dispose();
-            }
+    public void showAndWait(String title, String message) {
+        setNotificationTitle(title);
+        setNotificationMessage(message);
+        populateGui();
+    }
+    
+    public void showAndWait(String title, String message, int notificationType) {
+        setNotificationTitle(title);
+        setNotificationMessage(message);
+        setType(notificationType);
+        populateGui();
+    }
+    
+    public void showAndWait(String title, String message, int notificationType, int position) {
+        setNotificationTitle(title);
+        setNotificationMessage(message);
+        setType(notificationType);
+        setPosition(position);
+        populateGui();
+    }
+    
+    public void schedule(String title, String message, Date date) {
+        long delay = date.getTime() - System.currentTimeMillis();
+        ScheduledExecutorService scheduler = Executors.newScheduledThreadPool(1);
+        scheduler.schedule(() -> {
+            showAndDismiss(title, message);
+        }, delay, TimeUnit.MILLISECONDS);
+    }
+    
+    private void invokerTimer() {
+        Timer timer = new Timer(duration, (ActionEvent e) -> {
+            dispose();
         });
-        create();
-        nTitle.setText(title);
-        nBody.setDocumentText(message);
+        populateGui();
         timer.start();
+    }
+    
+    private void populateGui() {
+        create();
+        nTitle.setText(getNotificationTitle());
+        nBody.setDocumentText(getNotificationMessage());
     }
     
     private int getScreenWorkingWidth() {
@@ -160,21 +220,21 @@ public class Notifier extends JFrame {
         int minY = (int) rect.getMinY();
         int diff = 35;
         int x, y;
-        
+
         switch (choice) {
-            case TOP_RIGHT:
+            case NotifyPosition.TOP_RIGHT:
                 x = maxX - diff;
                 y = minY;
                 break;
-            case TOP_LEFT:
+            case NotifyPosition.TOP_LEFT:
                 x = minX;
                 y = minY;
                 break;
-            case BOTTOM_RIGHT:
+            case NotifyPosition.BOTTOM_RIGHT:
                 x = maxX - diff;
                 y = maxY - diff;
                 break;
-            case BOTTOM_LEFT:
+            case NotifyPosition.BOTTOM_LEFT:
                 x = minX;
                 y = maxY - diff;
                 break;
@@ -250,7 +310,7 @@ public class Notifier extends JFrame {
         cc.fill = GridBagConstraints.NONE;
         cc.anchor = GridBagConstraints.NORTHEAST;
         CloseButton close = new CloseButton(
-                "close-circle-outline_black.png", "Close", this);
+                "close-circle-outline_black.png", "Dismiss", this);
         close.setScaledHeight(18);
         close.setScaledWidth(18);
         close.create();
@@ -275,24 +335,30 @@ public class Notifier extends JFrame {
     private ImageIcon getTypeIcon() {
         String fileName;
         switch (type) {
-            case INFORMATION:
+            case NotifyType.INFORMATION:
                 fileName = "close-circle-outline_black.png";
                 break;
-            case SUCCESS:
+            case NotifyType.SUCCESS:
                 fileName = "check-circle-outline_black.png";
                 break;
-            case ERROR:
+            case NotifyType.ERROR:
                 fileName = "alert-circle-outline_black.png";
                 break;
-            case WARNING:
+            case NotifyType.WARNING:
                 fileName = "warning.png";
                 break;
             default:
                 fileName = "close-circle-outline_black.png";
         }
-        ScaledIcon icon = new ScaledIcon(fileName);
+        ImageScaler icon = new ImageScaler(fileName);
         icon.setScaledHeight(25);
         icon.setScaledWidth(25);
-        return icon.getScaledIcon();
+        return icon.getScaledImage();
     }    
+    
+    public static void main(String[] args) {
+        Notifier notifier = new Notifier();
+        notifier.showAndDismiss("Title", "Message", 
+                NotifyType.ERROR, NotifyPosition.BOTTOM_LEFT);
+    }
 }
