@@ -218,30 +218,30 @@ public class Notifier extends JFrame {
         int maxY = (int) rect.getMaxY();
         int minX = (int) rect.getMinX();
         int minY = (int) rect.getMinY();
-        int diff = 35;
+        int diff = 5;
         int x, y;
-
+        
         switch (choice) {
             case NotifyPosition.TOP_RIGHT:
-                x = maxX - diff;
-                y = minY;
+                x = maxX - windowWidth - diff;
+                y = minY + diff;
                 break;
             case NotifyPosition.TOP_LEFT:
-                x = minX;
-                y = minY;
+                x = minX + diff;
+                y = minY + diff;
                 break;
             case NotifyPosition.BOTTOM_RIGHT:
-                x = maxX - diff;
-                y = maxY - diff;
+                x = maxX - windowWidth - diff;
+                y = maxY - windowHeight - diff;
                 break;
             case NotifyPosition.BOTTOM_LEFT:
-                x = minX;
-                y = maxY - diff;
+                x = minX + diff;
+                y = maxY - windowHeight - diff;
                 break;
             default:
                 // Bottom Left
                 x = minX;
-                y = maxY - diff;
+                y = maxY - windowHeight;
         }
         
         return new Dimension(x,y);
@@ -354,7 +354,7 @@ public class Notifier extends JFrame {
         icon.setScaledHeight(25);
         icon.setScaledWidth(25);
         return icon.getScaledImage();
-    }    
+    }
     
     public static void main(String[] args) {
         Notifier notifier = new Notifier();
