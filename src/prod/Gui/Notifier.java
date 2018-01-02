@@ -336,7 +336,7 @@ public class Notifier extends JFrame {
         String fileName;
         switch (type) {
             case NotifyType.INFORMATION:
-                fileName = "close-circle-outline_black.png";
+                fileName = "information-outline_black.png";
                 break;
             case NotifyType.SUCCESS:
                 fileName = "check-circle-outline_black.png";
